@@ -1,8 +1,4 @@
-/*jslint devel: true */
-
-var champions = callAjax("http://localhost:5000/champions", function(data){
-    champions = data;
-});
+var champions = ["Wukong", "Jax", "Fiddlesticks", "Shaco", "Warwick", "Xayah", "Nidalee", "Zyra", "Kled", "Brand", "Rammus", "Illaoi", "Corki", "Braum", "Darius", "Tryndamere", "Miss Fortune", "Yorick", "Xerath", "Sivir", "Riven", "Orianna", "Gangplank", "Malphite", "Poppy", "Karthus", "Jayce", "Nunu", "Trundle", "Graves", "Zoe", "Gnar", "Lux", "Shyvana", "Renekton", "Fiora", "Jinx", "Kalista", "Fizz", "Kassadin", "Sona", "Irelia", "Viktor", "Rakan", "Kindred", "Cassiopeia", "Maokai", "Ornn", "Thresh", "Kayle", "Hecarim", "Kha'Zix", "Olaf", "Ziggs", "Syndra", "Dr. Mundo", "Karma", "Annie", "Akali", "Volibear", "Yasuo", "Kennen", "Rengar", "Ryze", "Shen", "Zac", "Talon", "Swain", "Bard", "Sion", "Vayne", "Nasus", "Kayn", "Twisted Fate", "Cho'Gath", "Udyr", "Lucian", "Ivern", "Leona", "Caitlyn", "Sejuani", "Nocturne", "Zilean", "Azir", "Rumble", "Morgana", "Taliyah", "Teemo", "Urgot", "Amumu", "Galio", "Heimerdinger", "Anivia", "Ashe", "Vel'Koz", "Singed", "Skarner", "Varus", "Twitch", "Garen", "Blitzcrank", "Master Yi", "Elise", "Alistar", "Katarina", "Ekko", "Mordekaiser", "Lulu", "Camille", "Aatrox", "Draven", "Tahm Kench", "Pantheon", "Xin Zhao", "Aurelion Sol", "Lee Sin", "Taric", "Malzahar", "Lissandra", "Diana", "Tristana", "Rek'Sai", "Vladimir", "Jarvan IV", "Nami", "Jhin", "Soraka", "Veigar", "Janna", "Nautilus", "Evelynn", "Gragas", "Zed", "Vi", "Kog'Maw", "Ahri", "Quinn", "LeBlanc", "Ezreal"]
 
 function getBlankInputElement()
 {
@@ -40,7 +36,7 @@ function addChampionSearchElem() {
     var new_elem = document.createElement("input");
     addClass(new_elem, "champion_input");
     new_elem.placeholder = "Champion";
-    autocomplete(new_elem, ["AhriFidcks", "Fiddlesticks", "Blitzcrank", "Malphite"], addAnotherChampionSelector);
+    autocomplete(new_elem, champions, addAnotherChampionSelector);
     $("#championList").insertAdjacentElement("beforeend", new_elem);
     new_elem.focus();
 }
@@ -108,7 +104,7 @@ function drawNewResult(champ_list, newChamp, winningPercentage) {
     responseSection.appendChild(table);
 }
 
-autocomplete($("#first_champion"), ["AhriFiddleks", "Fiddlesticks", "Blitzcrank", "Malphite"], addAnotherChampionSelector);
+autocomplete($("#first_champion"), champions, addAnotherChampionSelector);
 
 
 var responseFromDatabase = {
