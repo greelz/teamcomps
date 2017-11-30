@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Best website ever!</title>
+        <link rel="stylesheet" type="text/css" href="styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <!-- Put the navigation stuff here -->
+                <a href="index.html" class="logo-text"><img height="40px" src="images/logo.png" /></a>
+                <a href="#"><button class="btn-header">Ask a question</button></a>
+                <a href="about.html"><button class="btn-header">About</button></a>
+            </div>            
+            <div class="main">
+                <div class="bigText">
+                    Team Composition
+                </div>
+                
+                <div class="lefthalf">
+                    <div id="championList">
+                        <input type="text" class="champion_input" id="first_champion" placeholder="Champion Name" />
+                    </div>
+                    <div>
+                        <input type="button" id="calculateComps" value="Search" onclick="search();" />
+                    </div>
+                </div>
+                
+                <div class="righthalf">
+                    <div id="recommendations">
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        
+
+        <script src="js/generic.js"></script>
+        <script src="js/autocomplete.js"></script>
+        <script src="js/teamcomp.js"></script>
+    </body>
+</html>
