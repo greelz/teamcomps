@@ -3,9 +3,9 @@ import json
 import pprint
 from enum import Enum
 
-#ToDo - All APIs are currently using NA data 
+#ToDo - All APIs are currently using NA data
 
-API_KEY = "RGAPI-83485e31-1aec-44cd-87b7-62f08ac2d34b";
+API_KEY = "";
 KEY_HEADER = "X-Riot-Token";
 RANKED_SOLO_QUEUE = 420;
 
@@ -42,7 +42,7 @@ playersSearched=[];
 matcheesSearched=[];
 
 
-    
+
 
 def getParticipantsAboveTier():
     #TODO implement later to restrict people we search over
@@ -69,13 +69,13 @@ def getWinningChamps(matchDict):
 def getAllMatchWinningChamps(matchListJSON,f="winners.txt"):
     winnerDict = {}
     with open(f,'a') as the_file:
-        
+
         for match in matchListJSON:
             winningChamps = getWinningChamps(match);
             matchId = match['gameId']
             matchString = str(matchId) + ":" + str(winningChamps)
             the_file.write(matchString + "\n")
-        
+
     return
 
 def writeMatchesToFile(matchListJSON):
@@ -93,15 +93,14 @@ def getAllSampleData(dump="allWinners.txt"):
         fullFile="sampleData\\"+f;s
         data = json.load(open(fullFile),encoding='latin=1')
         getAllMatchWinningChamps(data['matches'],dump)
-    
     return
 
 def writeAllSampleMatchesToFile():
     sampleFile = 'sampleData\\matches1.json'
     data = json.load(open(sampleFile),encoding='latin=1')
     writeMatchesToFile(data['matches'])
-    
-    
+
+
 
 def getMatchesByAccountId(accountID):
     #TODO Support query parameters
@@ -118,7 +117,7 @@ def getMatch(matchId):
     r = requests.get(sUrl,headers=header);
     return r;
 
-    
+
 def loadJSONMatch(matchDict):
     gameDuration = matchDict['gameDuration'];
     seasonId = matchDict['seasonId'];
@@ -134,8 +133,6 @@ def loadJSONMatch(matchDict):
     gameCreation = matchDict['gameCreation'];
 
     return LoLMatch(seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation);
-    
-
 '''
     riotAPIHandler is intended to be the driver for pulling in data via the Riot APIs
     (https://developer.riotgames.com/api-methods/). Until I figure out the data base we are going
@@ -148,7 +145,6 @@ class RiotAPIHandler:
         self.key = apiKey;
         self.region = region;
 
-    
     def __str__(self):
         return ("Region: " + self.region +"\nKey: " + self.key);
 
@@ -156,11 +152,10 @@ class RiotAPIHandler:
 def appendNewProperty(name, value, propString):
     name = str(name)
     value = str(value)
-    
     propString += (name + ": " + value)
     propString += "\n"
     return propString
-   
+
 class RiotJSONHandler:
     def __init__(self, apiKey, region='na1'):
         self.key = apiKey;
@@ -194,7 +189,7 @@ class LoLMatch():
         matchString = appendNewProperty("gameDuration",self.gameDuration,matchString)
         matchString = appendNewProperty("gameCreation",self.gameCreation,matchString)
         return matchString
-        
+
     '''
         A lol match has:
             seasonId (int)
@@ -216,7 +211,6 @@ class ParticipantIdentity:
         A participant is made up of:
             player (instance of Player object)
             participantId (int)
-            
     '''
 
 class Player:
@@ -259,7 +253,6 @@ class ChampBan:
             pickTurn (int)
             championId (int)
     '''
-    
 class Participant:
     '''
         A Participant consists of:
@@ -330,7 +323,7 @@ class Stats:
             totalScoreRank (int)
             totalDamageTaken (long)
             timeCCingOthers (long)
-            physicalDamageTaken (long)            
+            physicalDamageTaken (long)
     '''
 
 class KDAStats:
@@ -361,7 +354,6 @@ class Rune:
         A Rune object consists of:
             runeId (int)
             rank (int)
-            
     '''
 
 class ParticipantTimeline:
