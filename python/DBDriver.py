@@ -1,25 +1,42 @@
 import os
 import json
+import generatePrimes as gp
 
 
 'This module is meant to handle getting the pulled data from the files'
 
+prime_nums = gp.getPrimes(139)
+champions_to_primes = {}
+
+current_prime = -1
+
+def championsIdToPrime(champId):
+    if champId in champions_to_primes:
+        return champions_to_primes[champId]
+
+    champion_to_primes_index += 1
+    champion_to_primes[champId] = prime_nums[champion_to_primes]
+    return prime_nums[champion_to_primes]
+    
+
 def loopOverFiles(directory):
     teamStats = {}
-    print(directory)
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            print(fileName)
+    for root, dirs, filenames in os.walk(directory):
+        for filename in filenames:
             #get winners and losers
-            fullFile = os.path.join(directory,filename)
-            matchDict = json.load(open(fileName))
-            teamDict = getWinnersAndLosers(matchDict)
-            loserKey = champArrayToKey(teamDict['losers'])
-            winnerKey = champArrayToKey(teamDict['winners'])
+            fullFile = os.path.join(directory, filename)
+            with open(fullFile, "r") as f:
+                matchDict = json.load(f)
+                teamDict = getWinnersAndLosers(matchDict)
+                if 'losers' and 'winners' in teamDict:
+                    loserKey = champArrayToKey(teamDict['losers'])
+                    winnerKey = champArrayToKey(teamDict['winners'])
+                else:
+                    continue
 
             # Handle updating stats
-            updateStatsDict(teamStats,teamDict['losers'],True)
-            updateStatsDict(teamStats,teamDict['winners'],False)
+            updateStatsDict(teamStats,teamDict['losers'], loserKey,True)
+            updateStatsDict(teamStats,teamDict['winners'], winnerKey,False)
             
         else:
             continue
@@ -29,28 +46,34 @@ def loopOverFiles(directory):
 def updateStatsDict(statsDict,champArr,key,isLoss):
     if isLoss:
         countKey = 'lossCount'
-
     else:
         countKey = 'winCount'
+
     if key in statsDict:
-        statsDict[key]['lossCount'] += 1
+        if not countKey in statsDict[key]:
+            statsDict[key][countKey] = 0
+        statsDict[key][countKey] += 1
     else:
         statsDict[key] = {}
         statsDict[key]['champs'] = champArr
-        statsDict[key]['lossCount'] += 1
+        if not countKey in statsDict[key]:
+            statsDict[key][countKey] = 0
+        statsDict[key][countKey] += 1
         
 
 def getWinnersAndLosers(matchDict):
     teamDict = {}
     winningChamps = []
     losingChamps = []
+    winningTeamId = ""
+    losingTeamId = ""
     
     for team in matchDict['teams']:
-        if team['win']=="Win":
-            winningTeamId = team['teamId'];
-
-        elif team['win'] == "Fail":
-            losingTeamId = team['teamId'];
+        if 'win' in team:
+            if team['win']=="Win":
+                winningTeamId = team['teamId']
+            elif team['win'] == "Fail":
+                losingTeamId = team['teamId']
 
     if (winningTeamId == "") or (losingTeamId == ""):
         return "";
@@ -58,9 +81,9 @@ def getWinnersAndLosers(matchDict):
     #now find each participant that was on the winning team
     for participant in matchDict['participants']:
         if participant['teamId'] == winningTeamId:
-            winningChamps.append(participant['championId']);
+            winningChamps.append(participant['championId'])
         elif participant['teamId'] == losingTeamId:
-            losingChamps.append(participant['championId']);
+            losingChamps.append(participant['championId'])
 
     teamDict['losers']  = losingChamps
     teamDict['winners'] = winningChamps
@@ -69,12 +92,14 @@ def getWinnersAndLosers(matchDict):
 
 #Take an array of five champs and create a key  for those champs
 def champArrayToKey(champArray):
-    c6 = chr(6)
-    key = c6
     for champ in champArray:
-        key = key + str(champ) + c6
+        key += str(championsIdToPrime(champ))
 
     return key
 
 
-loopOverFiles("C:\\Users\\jdantas\\Documents\\Personal\\Python\\lolBuild\\DataDumps\\MatchData")
+team_files = loopOverFiles("../data/matchData")
+
+
+with open("jordan's data.json", "w") as f:
+    json.dump(team_files, f)
