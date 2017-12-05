@@ -15,3 +15,4 @@ def getPrimes(num):
             break
 
     return primes
+    for li
