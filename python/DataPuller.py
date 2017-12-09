@@ -4,41 +4,41 @@ import pprint
 from enum import Enum
 
 #ToDo - All APIs are currently using NA data
-
-KEY_HEADER = "X-Riot-Token";
-RANKED_SOLO_QUEUE = 420;
+KEY_HEADER = "X-Riot-Token"
+RANKED_SOLO_QUEUE = 420
 
 #Start with Imaqtpie as a seed
-ImaqtpieAccountID = 32639237;
-greelzId = 208054926;
+ImaqtpieAccountID = 32639237
+greelzId = 208054926
+princess_caribou_id = 35062645
 
-sRegion = "na1";
+sRegion = "na1"
 
 class lolTiers(Enum):
-    BRONZE = 1;
-    SILVER = 2;
-    GOLD = 3;
-    PLATINUM = 4;
-    MASTER = 5;
-    CHALLENGER = 6;
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
+    MASTER = 5
+    CHALLENGER = 6
 
 class riotAPIStatusCodes(Enum):
-    SUCCESS = 200;
-    BADREQUEST = 400;
-    UNAUTHORIZED = 401;
-    FORBIDDEN = 403;
-    DATANOTFOUND = 404;
-    METHODNOTALLOWED = 405;
-    UNSUPPORTEDMEDIATYPE = 415;
-    RATELIMITEXCEEDED = 429;
-    INTERNALSERVERERROR = 500;
-    BADGATEWAY = 502;
-    SERVICEUNAVAILABLE = 503;
-    GATEWAYTIMEOUT = 504;
+    SUCCESS = 200
+    BADREQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    DATANOTFOUND = 404
+    METHODNOTALLOWED = 405
+    UNSUPPORTEDMEDIATYPE = 415
+    RATELIMITEXCEEDED = 429
+    INTERNALSERVERERROR = 500
+    BADGATEWAY = 502
+    SERVICEUNAVAILABLE = 503
+    GATEWAYTIMEOUT = 504
 
-playersSearched=[];
+playersSearched=[]
 
-matcheesSearched=[];
+matcheesSearched=[]
 
 
 
@@ -50,27 +50,27 @@ def getParticipantsAboveTier():
 
 def getWinningChamps(matchDict):
     #Get id of winning team first
-    winningTeamId = "";
+    winningTeamId = ""
     winningChamps=[]
     for team in matchDict['teams']:
         if team['win']=="Win":
-            winningTeamId = team['teamId'];
+            winningTeamId = team['teamId']
     if winningTeamId == "":
-        return "";
+        return ""
 
     #now find each participant that was on the winning team
     for participant in matchDict['participants']:
         if participant['teamId']!=winningTeamId:
-            continue;
-        winningChamps.append(participant['championId']);
-    return winningChamps;
+            continue
+        winningChamps.append(participant['championId'])
+    return winningChamps
 
 def getAllMatchWinningChamps(matchListJSON,f="winners.txt"):
     winnerDict = {}
     with open(f,'a') as the_file:
 
         for match in matchListJSON:
-            winningChamps = getWinningChamps(match);
+            winningChamps = getWinningChamps(match)
             matchId = match['gameId']
             matchString = str(matchId) + ":" + str(winningChamps)
             the_file.write(matchString + "\n")
@@ -86,10 +86,10 @@ def writeMatchesToFile(matchListJSON):
             json.dump(match,fh)
 
 def getAllSampleData(dump="allWinners.txt"):
-    sampleFiles=["matches1.json","matches2.json","matches3.json","matches4.json","matches5.json","matches6.json"];
+    sampleFiles=["matches1.json","matches2.json","matches3.json","matches4.json","matches5.json","matches6.json"]
 
     for f in sampleFiles:
-        fullFile="sampleData\\"+f;s
+        fullFile="sampleData\\"+fs
         data = json.load(open(fullFile),encoding='latin=1')
         getAllMatchWinningChamps(data['matches'],dump)
     return
@@ -103,39 +103,39 @@ def writeAllSampleMatchesToFile():
 
 def getMatchesByAccountId(accountID, queue = ""):
     #TODO Support query parameters
-    header = {KEY_HEADER: API_KEY};
+    header = {KEY_HEADER: API_KEY}
 
     
     sUrl = "https://na1.api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
     if queue != "":
         sUrl += "?queue=" + str(queue)
 
-    r = requests.get(sUrl, headers = header);
-    return r;
+    r = requests.get(sUrl, headers = header)
+    return r
 
 def getMatch(matchId):
-    header = {KEY_HEADER: API_KEY};
+    header = {KEY_HEADER: API_KEY}
     sUrl= "https://na1.api.riotgames.com/lol/match/v3/matches/" + str(matchId)
 
-    r = requests.get(sUrl, headers = header);
-    return r;
+    r = requests.get(sUrl, headers = header)
+    return r
 
 
 def loadJSONMatch(matchDict):
-    gameDuration = matchDict['gameDuration'];
-    seasonId = matchDict['seasonId'];
-    queueId = matchDict['queueId'];
-    gameId = matchDict['gameId'];
-    participantIdentities = matchDict['participantIdentities'];
-    gameVersion = matchDict['gameVersion'];
-    mapId = matchDict['mapId'];
-    gameType = matchDict['gameType'];
-    teams = matchDict['teams'];
-    participants = matchDict['participants'];
-    gameMode = matchDict['gameMode'];
-    gameCreation = matchDict['gameCreation'];
+    gameDuration = matchDict['gameDuration']
+    seasonId = matchDict['seasonId']
+    queueId = matchDict['queueId']
+    gameId = matchDict['gameId']
+    participantIdentities = matchDict['participantIdentities']
+    gameVersion = matchDict['gameVersion']
+    mapId = matchDict['mapId']
+    gameType = matchDict['gameType']
+    teams = matchDict['teams']
+    participants = matchDict['participants']
+    gameMode = matchDict['gameMode']
+    gameCreation = matchDict['gameCreation']
 
-    return LoLMatch(seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation);
+    return LoLMatch(seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation)
 '''
     riotAPIHandler is intended to be the driver for pulling in data via the Riot APIs
     (https://developer.riotgames.com/api-methods/). Until I figure out the data base we are going
@@ -145,11 +145,11 @@ def loadJSONMatch(matchDict):
 
 class RiotAPIHandler:
     def __init__(self, apiKey, region='na1'):
-        self.key = apiKey;
-        self.region = region;
+        self.key = apiKey
+        self.region = region
 
     def __str__(self):
-        return ("Region: " + self.region +"\nKey: " + self.key);
+        return ("Region: " + self.region +"\nKey: " + self.key)
 
 
 def appendNewProperty(name, value, propString):
@@ -161,22 +161,22 @@ def appendNewProperty(name, value, propString):
 
 class RiotJSONHandler:
     def __init__(self, apiKey, region='na1'):
-        self.key = apiKey;
-        self.region = region;
+        self.key = apiKey
+        self.region = region
 
 class LoLMatch():
     def __init__(self, seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation):
-        self.seasonId = seasonId;
-        self.queueId = queueId;
-        self.gameId = gameId;
-        self.participantIdentities = participantIdentities;
-        self.gameVersion = gameVersion;
-        self.mapId = mapId;
-        self.gameType = gameType;
-        self.teams = teams;
-        self.participants = participants;
-        self.gameDuration = gameDuration;
-        self.gameCreation = gameCreation;
+        self.seasonId = seasonId
+        self.queueId = queueId
+        self.gameId = gameId
+        self.participantIdentities = participantIdentities
+        self.gameVersion = gameVersion
+        self.mapId = mapId
+        self.gameType = gameType
+        self.teams = teams
+        self.participants = participants
+        self.gameDuration = gameDuration
+        self.gameCreation = gameCreation
 
     def __str__(self):
         matchString = ""

@@ -4,8 +4,6 @@ import time
 import os
 import json
 import importlib
-#driver function
-
 
 
 '''
@@ -23,6 +21,7 @@ def startPulling(seedAccountId):
     badLoopsInARow = 0
     waitTimes = {}
     matches = {}
+    running_data = {}
 
     playersProcessed = {}
     playersToProcess = []
@@ -35,9 +34,6 @@ def startPulling(seedAccountId):
         
         for matchId in matchList:
             count += 1
-            if count > 100000:
-                return
-                
             if count % 277 == 0:
                 print("Doing great. Processing match " + str(matchId))
             matchResponse = getMatch(matchId)
@@ -50,6 +46,10 @@ def startPulling(seedAccountId):
                 continue 
 
             addPlayersFromMatch(matchResponse.json, playersProcessed, playersToProcess)
+            running_data['playersProcessed'] = playersProcessed
+            running_data['playersToProcess'] = playersToProcess
+            with open("running_data.json", "w") as f:
+                json.dump(running_data, f)
             log_match(matchResponse.json)
             if matchResponse.sleepTime > 0:
                 print("We're getting a little to excited here time for sleep")
@@ -58,7 +58,6 @@ def startPulling(seedAccountId):
 
         playersProcessed[accountId] = 1
         badLoopsInARow = 0
-    return "lolRulez"
 
 def addPlayersFromMatch(match, playersProcessed, playersToProcess):
     for pId in match['participantIdentities']:
@@ -67,7 +66,9 @@ def addPlayersFromMatch(match, playersProcessed, playersToProcess):
         # Do not add players we have already processed or are waiting to process
         if (accountId in playersProcessed) or (accountId in playersToProcess):
             continue
-        playersToProcess.append(accountId)
+        else:
+            playersToProcess.append(accountId)
+
 
 def writeMatchToFile(match):
     matchId = match['gameId']
@@ -83,7 +84,8 @@ def writeMatchToFile(match):
 def log_match(match): 
     writeMatchToFile(match)
     # And also add this to the database
-    db.process_match(match)
+    # Stop adding the matches to the dictionary, it doesn't really matter anyways
+    #db.process_match(match)
 
 
 def getAccountMatchList(accountId):
@@ -159,4 +161,4 @@ class responseObject:
         else:
             return int(appSleepTime)
 
-startPulling(d.greelzId)
+startPulling(d.princess_caribou_id)
