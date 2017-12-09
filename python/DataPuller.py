@@ -4,6 +4,7 @@ import pprint
 from enum import Enum
 
 #ToDo - All APIs are currently using NA data
+API_KEY = "RGAPI-0e41ab0a-d10d-4921-b5d6-93002533bf52"
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = 420
 

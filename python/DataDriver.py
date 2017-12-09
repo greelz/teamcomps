@@ -1,6 +1,6 @@
 import DataPuller as d
-import DBDriver as db
 import time
+import datetime
 import os
 import json
 import importlib
@@ -18,57 +18,93 @@ def startPulling(seedAccountId):
     #   add players to players to search for list (if they are not there and have not been processed)
     # for each player in player to process list
 
-    badLoopsInARow = 0
     waitTimes = {}
     matches = {}
     running_data = {}
-
-    playersProcessed = {}
+    players_processed = {}
     playersToProcess = []
-    playersToProcess.append(seedAccountId)
+    matchesProcessed = {}
     count = 0
+    new_games = 0
     test = 3
+
+    ''' Check to see if we can grab the running data files. 
+        If so, then start from that information so we can get a 
+        head start. Otherwise, append the seedId so we start with 
+        something.
+    '''
+    with open("running_data.json", "r") as f:
+        running_data = json.load(f)
+        if 'players_processed' in running_data:
+            players_processed = running_data['players_processed']
+        if 'playersToProcess' in running_data:
+            playersToProcess = running_data['playersToProcess']
+        if 'matches_processed' in running_data:
+            matches_processed = running_data['matches_processed']
+        if len(playersToProcess) == 0:
+            playersToProcess.append(seedAccountId)
+
+    ''' This will loop pretty much forever. I don't expect us to hit
+        many breaking points, except to switch out the API key (since 
+        it refreshes every day until we get a permanent key). Not sure 
+        if I'm a huge fan of the while True, but oh well.
+    '''
     while True:
         accountId = playersToProcess.pop()
         matchList = getAccountMatchList(accountId);       
         
-        for matchId in matchList:
-            count += 1
-            if count % 277 == 0:
-                print("Doing great. Processing match " + str(matchId))
-            matchResponse = getMatch(matchId)
-            
-            if str(matchResponse.statusCode) != str(d.riotAPIStatusCodes.SUCCESS):
-                print('Something went wrong in Whoville')
-                print(matchResponse.statusCode)
-                print(d.riotAPIStatusCodes.SUCCESS)
-                badLoopsInARow += 1
-                continue 
+        if matchList:
+            for matchId in matchList:
+                count += 1
+                if str(matchId) not in matches_processed:
+                    matches_processed[str(matchId)] = 1
+                    matchResponse = getMatch(matchId)
+                    
+                    ''' If we run into some status error, print out the specific status 
+                        code received from the get request. Continue on. Maybe we can add
+                        back the 'badLoopsInARow' concept, but I don't think it's too important
+                    '''
+                    if not matchResponse or (str(matchResponse.statusCode) != str(d.riotAPIStatusCodes.SUCCESS.value)):
+                        print('Something went wrong in Whoville')
+                        print(matchResponse.statusCode)
+                        continue 
 
-            addPlayersFromMatch(matchResponse.json, playersProcessed, playersToProcess)
-            running_data['playersProcessed'] = playersProcessed
-            running_data['playersToProcess'] = playersToProcess
-            with open("running_data.json", "w") as f:
-                json.dump(running_data, f)
-            log_match(matchResponse.json)
-            if matchResponse.sleepTime > 0:
-                print("We're getting a little to excited here time for sleep")
-                time.sleep(matchResponse.sleepTime+1) #add 1 to be safe :)
-            #determine if we should sleep
+                    addPlayersFromMatch(matchResponse.json, players_processed, playersToProcess)
 
-        playersProcessed[accountId] = 1
-        badLoopsInARow = 0
+                    new_game = log_match(matchResponse.json)
+                    if new_game:
+                        new_games += 1
 
-def addPlayersFromMatch(match, playersProcessed, playersToProcess):
+                    if matchResponse.sleepTime > 0:
+                        print("We're getting a little too excited here time for sleep")
+                        print("Percent new data: " + str(new_games / count))
+                        running_data['players_processed'] = players_processed
+                        running_data['playersToProcess'] = playersToProcess
+                        running_data['matches_processed'] = matches_processed
+                        with open("running_data.json", "w") as f:
+                            json.dump(running_data, f)
+                        time.sleep(matchResponse.sleepTime + 1) #add 1 to be safe :)
+                else:
+                    print("Already processed game: " + str(matchId))
+
+            players_processed[accountId] = unix_time_millis(datetime.datetime.now())
+            badLoopsInARow = 0
+
+def addPlayersFromMatch(match, players_processed, playersToProcess):
     for pId in match['participantIdentities']:
         player = pId['player']
         accountId = player['accountId']
         # Do not add players we have already processed or are waiting to process
-        if (accountId in playersProcessed) or (accountId in playersToProcess):
+        if (accountId in players_processed) or (accountId in playersToProcess):
             continue
         else:
-            playersToProcess.append(accountId)
-
+            ''' We really only want to have a max of 1000 players to process
+                Otherwise, the json file grows exponentially
+            '''
+            if len(playersToProcess) < 1000:
+                playersToProcess.append(accountId)
+            else:
+                playersToProcess = playersToProcess[:1000]
 
 def writeMatchToFile(match):
     matchId = match['gameId']
@@ -79,14 +115,21 @@ def writeMatchToFile(match):
         with open(abspath, 'w') as f:
             json.dump(match, f)
             print("Creating file: " + abspath)
+        return True
+    else:
+        print("Hit an existing match: " + filename)
+        return False
     
 
 def log_match(match): 
-    writeMatchToFile(match)
+    return writeMatchToFile(match)
     # And also add this to the database
     # Stop adding the matches to the dictionary, it doesn't really matter anyways
     #db.process_match(match)
 
+epoch = datetime.datetime.utcfromtimestamp(0)
+def unix_time_millis(dt):
+    return (dt - epoch).total_seconds() * 1000.0
 
 def getAccountMatchList(accountId):
     r = d.getMatchesByAccountId(accountId, d.RANKED_SOLO_QUEUE).json()
@@ -96,8 +139,6 @@ def getAccountMatchList(accountId):
 def getMatch(matchId):
     r = d.getMatch(matchId)
     return responseObject(r)
-    #,r.status_code,r.headers['X-App-Rate-Limit'],r.headers['X-App-Rate-Limit-Count'])
-
 
 class responseObject:
     def  __init__(self, request):
@@ -122,12 +163,12 @@ class responseObject:
             self.appRateCounts = self.generateRateLimitDict(appRateCountString)
             self.methodRateLimits = self.generateRateLimitDict(methodAppRateLimitString)
             self.methodRateCounts = self.generateRateLimitDict(mathodAppRateCountString)
+            self.sleepTime = self.getSleepTime()
 
         except:
             print("Exception logged when attempting to create object")
             self.statusCode = 99999;
 
-        self.sleepTime = self.getSleepTime()
         return
 
     def generateRateLimitDict(self, rateLimitString):
