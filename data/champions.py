@@ -18,10 +18,12 @@ def getPrimes(num):
 primes = getPrimes(1000)
 with open("champions.json", "r") as f:
     champions_dic = json.load(f)
+    champ_dic = {}
     for champion in champions_dic['data']:
         champ_id = champions_dic['data'][champion]['id']
+        champ_dic[champion.lower()] = champions_dic['data'][champion]['id']
         champions_dic['data'][champion]['prime_key'] = primes[champions_dic['data'][champion]['id'] - 1]
         
-with open("champions.json", "w") as r:
-    json.dump(champions_dic, r)
+with open("champions3.json", "w") as r:
+    json.dump(champ_dic, r, sort_keys=True)
         
