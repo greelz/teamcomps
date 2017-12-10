@@ -1,10 +1,14 @@
 import requests
+import datetime
 import json
 import pprint
+import time
 from enum import Enum
 
 #ToDo - All APIs are currently using NA data
-API_KEY = "RGAPI-0e41ab0a-d10d-4921-b5d6-93002533bf52"
+current_key_index = 0
+API_KEYS = ["RGAPI-b7b03aad-5c92-4229-94ad-229772f5b9da", "RGAPI-69cb57fa-9fd0-4f2a-a436-be98a26b6ece"]
+sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = 420
 
@@ -14,14 +18,6 @@ greelzId = 208054926
 princess_caribou_id = 35062645
 
 sRegion = "na1"
-
-class lolTiers(Enum):
-    BRONZE = 1
-    SILVER = 2
-    GOLD = 3
-    PLATINUM = 4
-    MASTER = 5
-    CHALLENGER = 6
 
 class riotAPIStatusCodes(Enum):
     SUCCESS = 200
@@ -36,13 +32,6 @@ class riotAPIStatusCodes(Enum):
     BADGATEWAY = 502
     SERVICEUNAVAILABLE = 503
     GATEWAYTIMEOUT = 504
-
-playersSearched=[]
-
-matcheesSearched=[]
-
-
-
 
 def getParticipantsAboveTier():
     #TODO implement later to restrict people we search over
@@ -100,27 +89,134 @@ def writeAllSampleMatchesToFile():
     data = json.load(open(sampleFile),encoding='latin=1')
     writeMatchesToFile(data['matches'])
 
-
-
-def getMatchesByAccountId(accountID, queue = ""):
-    #TODO Support query parameters
-    header = {KEY_HEADER: API_KEY}
-
-    
-    sUrl = "https://na1.api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
+def getMatchesByAccountId(accountID, callback, queue = ""):
+    url = "https://na1.api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
     if queue != "":
-        sUrl += "?queue=" + str(queue)
+        url += "?queue=" + str(queue)
+    return requestWrapper(url, callback)
 
-    r = requests.get(sUrl, headers = header)
+def getMatch(matchId, callback):
+    url = "https://na1.api.riotgames.com/lol/match/v3/matches/" + str(matchId)
+    return requestWrapper(url, callback)
+
+def requestWrapper(url, callback, headers = {}):
+    ''' Algorithm: 
+        1. Get the request using the current API_KEY
+        2. If we need to sleep, then process then match and flip API_KEYS (for the next request)
+        3. If we're at the last API_KEY, then we head back to the start and sleep for the remaining time from step #2, and etc
+    '''
+
+    global current_key_index
+    headers[KEY_HEADER] = API_KEYS[current_key_index]
+    r = responseObject(requests.get(url, headers = headers))
+
+    # First check if something went wrong (I'm not sure if this has ever really
+    # been hit). 
+    if not r or (str(r.statusCode) != str(riotAPIStatusCodes.SUCCESS.value)):
+        print('Something went wrong in Whoville')
+        print(r.statusCode)
+        return {}
+
+    if r.sleepTime > 0:
+        print("Hit our limit on api_key #" + str(current_key_index))
+        current_time = unix_time_millis(datetime.datetime.now())
+        sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
+        current_key_index += 1
+        if current_key_index >= len(API_KEYS):
+            current_key_index = 0
+
+        if current_time < sleep_until_times[current_key_index]:
+            if callback:
+                callback()
+            seconds_to_sleep = int((sleep_until_times[current_key_index] - current_time) / 1000.0) + 1 #add 1 to be safe :)
+            print("We're getting a little too excited here time for sleep.")
+            print("Sleeping for " + str(seconds_to_sleep) + " seconds. Bye now!")
+            time.sleep(seconds_to_sleep) 
+        else:
+            sleep_until_times[current_key_index] = 0
+
     return r
+    
+epoch = datetime.datetime.utcfromtimestamp(0)
+def unix_time_millis(dt):
+    return (dt - epoch).total_seconds() * 1000.0
 
-def getMatch(matchId):
-    header = {KEY_HEADER: API_KEY}
-    sUrl= "https://na1.api.riotgames.com/lol/match/v3/matches/" + str(matchId)
+class responseObject:
+    def  __init__(self, request):
+        self.json = request.json()
+        self.statusCode = request.status_code
+        #Deal With Rate limits
+        '''
+            rateLimit (rl) and rateLimitCount (rlc) come in as two comma
+            delimited lists. rl contains the definition for the rate limits
+            and rlc contains the current counts for those. Each comma delimitted
+            piece is a colon delimitted piece which contains the seconds in the second
+            piece and the limit in the
+        '''
+        rHeader = request.headers
 
-    r = requests.get(sUrl, headers = header)
-    return r
+        try:
+            appRateLimitString = rHeader['X-App-Rate-Limit']
+            appRateCountString = rHeader['X-App-Rate-Limit-Count']
+            methodAppRateLimitString = rHeader['X-Method-Rate-Limit']
+            mathodAppRateCountString = rHeader['X-Method-Rate-Limit-Count']
+            self.appRateLimits = self.generateRateLimitDict(appRateLimitString)
+            self.appRateCounts = self.generateRateLimitDict(appRateCountString)
+            self.methodRateLimits = self.generateRateLimitDict(methodAppRateLimitString)
+            self.methodRateCounts = self.generateRateLimitDict(mathodAppRateCountString)
+            self.sleepTime = self.getSleepTime()
 
+        except:
+            print("Exception logged when attempting to create object")
+            self.statusCode = 99999;
+
+        return
+
+    def generateRateLimitDict(self, rateLimitString):
+        rls = rateLimitString
+        rlsArray = rls.split(',')
+        rlDict = {}
+
+        for rlTuple in rlsArray:
+            rlTupleSplit = rlTuple.split(':')
+            rlDict[rlTupleSplit[1]] = rlTupleSplit[0]
+        return rlDict
+
+    def getSleepTime(self):
+        appSleepTime = 0
+        methodSleepTime = 0
+        
+        #check app limits
+        for bucket in self.appRateLimits:
+            if (self.appRateLimits[bucket] == self.appRateCounts[bucket]):
+                appSleepTime = bucket
+                break
+        #check method limits
+        for bucket in self.methodRateLimits:
+            if self.methodRateCounts[bucket] == self.methodRateLimits[bucket]:
+                methodSleepTime = bucket
+                return int(bucket)
+
+        if int(methodSleepTime) > int(appSleepTime):
+            return int(methodSleepTime)
+
+        else:
+            return int(appSleepTime)
+
+
+
+
+'''
+Below code is not implemented yet - Matt needs to stop searching for stuff below here
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+*************************************************************************************
+'''
 
 def loadJSONMatch(matchDict):
     gameDuration = matchDict['gameDuration']
@@ -137,13 +233,14 @@ def loadJSONMatch(matchDict):
     gameCreation = matchDict['gameCreation']
 
     return LoLMatch(seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation)
+
+
 '''
     riotAPIHandler is intended to be the driver for pulling in data via the Riot APIs
     (https://developer.riotgames.com/api-methods/). Until I figure out the data base we are going
     to be straight up saving the JSON files dawg. I will be using a separate class to manipulate the data
     stored in the JSON files. TODO: Have the file interaction class write to a data base (Mongo?)
 '''
-
 class RiotAPIHandler:
     def __init__(self, apiKey, region='na1'):
         self.key = apiKey
@@ -164,6 +261,14 @@ class RiotJSONHandler:
     def __init__(self, apiKey, region='na1'):
         self.key = apiKey
         self.region = region
+
+class lolTiers(Enum):
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
+    MASTER = 5
+    CHALLENGER = 6
 
 class LoLMatch():
     def __init__(self, seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation):
