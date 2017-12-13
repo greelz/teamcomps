@@ -49,12 +49,14 @@ def process_match(match_data):
         losers["win"] = False
         losers["team_comp"] = team_dict["losers"]
         losers["time_of_entry"] = time
+	losers["patch"] = match_data['gameVersion']
 
         winners["comp_key"] = winnerTeamKey
         winners["game"] = match_data['gameId']
         winners["win"] = True
         winners["team_comp"] = team_dict["winners"]
         winners["time_of_entry"] = time
+	winners["patch"] = match_data['gameVersion']
         client.games.insert_many([winners, losers])
 
     return
