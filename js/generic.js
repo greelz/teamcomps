@@ -67,3 +67,24 @@ function callAjax(url, callback, extra){
         // XMLHttpRequest not supported; handle fallback
     }
 };
+
+// Polyfills *****************
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position){
+        return this.substr(position || 0, searchString.length) === searchString;
+    };
+}
+
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(searchStr, position) {
+        // This works much better than >= because
+        // it compensates for NaN:
+        if (!(position < this.length)) {
+            position = this.length;
+        }
+        else {
+            position |= 0; // round position
+        }
+        return this.substr(position - searchStr.length, searchStr.length) === searchStr;
+    }
+};

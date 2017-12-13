@@ -14,7 +14,6 @@ function autocomplete(elem, source, callback)
     
     function handleEnter() {
         var li_item = $(".highlighted_search");
-        removeElement($(".autocomplete"));
         if (li_item) {
             // Then we just want to select that element and move on
             // Add the full text, and do an "official search"
@@ -22,10 +21,22 @@ function autocomplete(elem, source, callback)
             doOfficialSearch(elem.value);
         }
         else {
-            if (elem && elem.value && elem.value.length > 0) {
-                doOfficialSearch(elem.value);
+            var ac = $(".autocomplete");
+            // In this case, we have something that may be auto-completed
+            // So we'll search the top result
+            // Otherwise, either they're typing super fast, or they have random data
+            // And we'll try to search anyways
+            if (ac && ac.firstChild && ac.firstChild.firstChild) {
+                elem.value = ac.firstChild.firstChild.innerText;
+                doOfficialSearch(ac.firstChild.firstChild.innerText);
+            }
+            else {            
+                if (elem && elem.value && elem.value.length > 0) {
+                    doOfficialSearch(elem.value);
+                }
             }
         }
+        removeElement($(".autocomplete"));
     }
     
     function drawAutocomplete(suggestions) {
@@ -77,10 +88,27 @@ function autocomplete(elem, source, callback)
                 var elements = [];
                 for (var i = 0; i < associatedArray.length; ++i) {
                     if (associatedArray[i].indexOf(searchVal) > -1) {
-                        elements.push(source[i]);
+                        if (associatedArray[i].startsWith(searchVal)) {
+                            elements.push([source[i], 1]);
+                        }
+                        else if (associatedArray[i].endsWith(searchVal)) {
+                            elements.push([source[i], 3]);
+                        }
+                        else {
+                            elements.push([source[i], 2]);
+                        }
                     }
                 }
-                drawAutocomplete(elements);
+                elements.sort(function(a, b) { 
+                    if (a[1] < b[1]) return -1;
+                    if (a[1] > b[1]) return 1;
+                    return 0;
+                });
+                var result = [];
+                for (i = 0; i < elements.length; ++i) {
+                    result.push(elements[i][0]);
+                }
+                drawAutocomplete(result);
             }
         }
         else {
@@ -142,8 +170,10 @@ function autocomplete(elem, source, callback)
         else if (event.keyCode === 38) { // up arrow
             event.preventDefault();
         }
-        else if (event.keyCode === 9) {
-            event.preventDefault();
+        else if (event.keyCode === 9) { // tab key
+            if ($(".autocomplete")) {
+                event.preventDefault();
+            }
         }
     })
                 
@@ -162,9 +192,11 @@ function autocomplete(elem, source, callback)
             moveToAutocomplete("up");   
         }
         
-        else if (event.keyCode === 9) {
-            event.preventDefault();
-            moveToAutocomplete("down");
+        else if (event.keyCode === 9) { // tab key
+            if ($(".autocomplete")) {
+                moveToAutocomplete("down");
+                event.preventDefault();
+            }
         }
         else if (event && event.target) {
             doOnDelay(search, 150);
