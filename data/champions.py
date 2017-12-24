@@ -1,5 +1,5 @@
 import json
-
+'''
 def getPrimes(num):
     primes = [2]
     is_prime = False
@@ -23,7 +23,13 @@ with open("champions.json", "r") as f:
         champ_id = champions_dic['data'][champion]['id']
         champ_dic[champion.lower()] = champions_dic['data'][champion]['id']
         champions_dic['data'][champion]['prime_key'] = primes[champions_dic['data'][champion]['id'] - 1]
+'''
+
+with open("champions.json", "r") as f:
+    dic = json.load(f)
         
-with open("champions3.json", "w") as r:
-    json.dump(champ_dic, r, sort_keys=True)
-        
+dic = dic['data']
+# Keys are champion names, we want to create a dictionary from key & id[P]
+with open("champions4.json", "w") as f:
+    json.dump( { int(v['id']):v['name'] for k,v in dic.items() }, f)
+

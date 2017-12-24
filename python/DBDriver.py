@@ -12,28 +12,21 @@ prime_nums = gp.getPrimes(1000)
 client = MongoClient().league
 
 def loopOverFiles(directory):
-    teamStats = {}
+    count = 0
     for root, dirs, filenames in os.walk(directory):
         for filename in filenames:
             #get winners and losers
             fullFile = os.path.join(directory, filename)
+            if (count % 10000 == 0):
+                print("Processed " + str(count) + " games.")
             with open(fullFile, "r") as f:
-                matchDict = json.load(f)
-                teamDict = getWinnersAndLosers(matchDict)
-                if "losers" and "winners" in teamDict:
-                    loserTeamKey = champArrayToKey(teamDict["losers"])
-                    winnerTeamKey = champArrayToKey(teamDict["winners"])
-                else:
+                try:
+                    count += 1
+                    matchDict = json.load(f)
+                    process_match(matchDict)
+                except:
+                    print(fullFile)
                     continue
-
-            # Handle updating stats
-            updateStatsDict(teamStats,teamDict["losers"], loserTeamKey,True)
-            updateStatsDict(teamStats,teamDict["winners"], winnerTeamKey,False)
-            
-        else:
-            continue
-
-    return teamStats
 
 
 def process_match(match_data):
@@ -49,14 +42,14 @@ def process_match(match_data):
         losers["win"] = False
         losers["team_comp"] = team_dict["losers"]
         losers["time_of_entry"] = time
-	losers["patch"] = match_data['gameVersion']
+        losers["patch"] = match_data['gameVersion']
 
         winners["comp_key"] = winnerTeamKey
         winners["game"] = match_data['gameId']
         winners["win"] = True
         winners["team_comp"] = team_dict["winners"]
         winners["time_of_entry"] = time
-	winners["patch"] = match_data['gameVersion']
+        winners["patch"] = match_data['gameVersion']
         client.games.insert_many([winners, losers])
 
     return
@@ -117,8 +110,8 @@ def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
 
 
+team_files = loopOverFiles("../data/matchData")
 '''
-#team_files = loopOverFiles("../data/matchData")
 with open("malone_is_great.json", "r") as f:
     team_files = json.load(f)
 
