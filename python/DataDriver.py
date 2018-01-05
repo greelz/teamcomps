@@ -4,7 +4,7 @@ import os
 import json
 import importlib
 
-def startPulling(seedAccountId = None):
+def startPulling(seedAccountId = None, region = "na1"):
     #greelz account id is 208054926
     # start with some seed champion
     # append seed champion to playersProceessed list
@@ -39,7 +39,7 @@ def startPulling(seedAccountId = None):
         head start. Otherwise, append the seedId so we start with 
         something.
     '''
-    if not seedAccountId:
+    if seedAccountId is None:
         with open("running_data.json", "r") as f:
             running_data = json.load(f)
             if 'players_processed' in running_data:
@@ -52,6 +52,8 @@ def startPulling(seedAccountId = None):
                 playersToProcess.append(seedAccountId)
     else:
         playersToProcess.append(seedAccountId)
+        matches_processed = {}
+        players_processed = {}
 
     ''' This will loop pretty much forever. I don't expect us to hit
         many breaking points, except to switch out the API key (since 
@@ -60,18 +62,19 @@ def startPulling(seedAccountId = None):
     '''
     while True:
         accountId = playersToProcess.pop()
-        matchList = getAccountMatchList(accountId, write_current_data);       
+        matchList = getAccountMatchList(accountId, region, write_current_data);       
         
         if matchList:
             for matchId in matchList:
                 count += 1
                 if str(matchId) not in matches_processed:
                     matches_processed[str(matchId)] = 1
-                    matchResponse = d.getMatch(matchId, write_current_data)
-                    addPlayersFromMatch(matchResponse.json, players_processed, playersToProcess)
-                    new_game = log_match(matchResponse.json)
-                    if new_game:
-                        new_games += 1
+                    matchResponse = d.getMatch(matchId, region, write_current_data)
+                    if matchResponse and matchResponse.json is not None:
+                        addPlayersFromMatch(matchResponse.json, players_processed, playersToProcess)
+                        new_game = log_match(matchResponse.json)
+                        if new_game:
+                            new_games += 1
 
                 else:
                     print("Already processed game in this process: " + str(matchId))
@@ -100,7 +103,7 @@ def addPlayersFromMatch(match, players_processed, playersToProcess):
 def writeMatchToFile(match):
     matchId = match['gameId']
     filename = str(matchId) + '.json'
-    directory = "../data/matchData/"
+    directory = "../../matchData/"
     abspath = os.path.join(directory, filename)
     if not os.path.isfile(abspath):
         with open(abspath, 'w') as f:
@@ -119,9 +122,26 @@ def log_match(match):
     #db.process_match(match)
 
 
-def getAccountMatchList(accountId, callback):
-    r = d.getMatchesByAccountId(accountId, callback, d.RANKED_SOLO_QUEUE).json
-    if 'matches' in r:
-        return [match['gameId'] for match in r['matches']]
+def getAccountMatchList(accountId, region, callback):
+    r = d.getMatchesByAccountId(accountId, region, callback, d.RANKED_SOLO_QUEUE)
+    if r is not None and r.json is not None:
+        r = r.json
+        if 'matches' in r:
+            return [match['gameId'] for match in r['matches']]
 
-startPulling()
+startPulling(217534405, "na1") # The Vero - NA
+
+
+'''
+#Start with Imaqtpie as a seed
+ImaqtpieAccountID = 32639237
+greelzId = 208054926
+princess_caribou_id = 35062645
+hide_on_bush_id = 3440481
+bwipo_id = 37841420
+mvp_max_id = 2238783
+
+sRegion = "na1"
+krRegion = "kr"
+euwRegion = "euw1"
+'''

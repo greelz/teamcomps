@@ -7,17 +7,10 @@ from enum import Enum
 
 #ToDo - All APIs are currently using NA data
 current_key_index = 0
-API_KEYS = ["RGAPI-b7b03aad-5c92-4229-94ad-229772f5b9da", "RGAPI-69cb57fa-9fd0-4f2a-a436-be98a26b6ece"]
+API_KEYS = ["RGAPI-64fea9df-baab-41e4-a04b-70277334eb2e", "RGAPI-6605aa29-d46a-4f6a-bff6-0a207d6864ab", "RGAPI-485ceff6-4ed7-42ca-981f-311dc73b0f52"]
 sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = 420
-
-#Start with Imaqtpie as a seed
-ImaqtpieAccountID = 32639237
-greelzId = 208054926
-princess_caribou_id = 35062645
-
-sRegion = "na1"
 
 class riotAPIStatusCodes(Enum):
     SUCCESS = 200
@@ -89,14 +82,15 @@ def writeAllSampleMatchesToFile():
     data = json.load(open(sampleFile),encoding='latin=1')
     writeMatchesToFile(data['matches'])
 
-def getMatchesByAccountId(accountID, callback, queue = ""):
-    url = "https://na1.api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
+def getMatchesByAccountId(accountID, region, callback, queue = ""):
+    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
     if queue != "":
         url += "?queue=" + str(queue)
+    print(url)
     return requestWrapper(url, callback)
 
-def getMatch(matchId, callback):
-    url = "https://na1.api.riotgames.com/lol/match/v3/matches/" + str(matchId)
+def getMatch(matchId, region, callback):
+    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matches/" + str(matchId)
     return requestWrapper(url, callback)
 
 def requestWrapper(url, callback, headers = {}):
@@ -115,19 +109,20 @@ def requestWrapper(url, callback, headers = {}):
     if not r or (str(r.statusCode) != str(riotAPIStatusCodes.SUCCESS.value)):
         print('Something went wrong in Whoville')
         print(r.statusCode)
-        return {}
+        return None
 
     if r.sleepTime > 0:
         print("Hit our limit on api_key #" + str(current_key_index))
+        if callback:
+            callback()
         current_time = unix_time_millis(datetime.datetime.now())
         sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
         current_key_index += 1
         if current_key_index >= len(API_KEYS):
+            print("Resetting key index to 0.")
             current_key_index = 0
 
         if current_time < sleep_until_times[current_key_index]:
-            if callback:
-                callback()
             seconds_to_sleep = int((sleep_until_times[current_key_index] - current_time) / 1000.0) + 1 #add 1 to be safe :)
             print("We're getting a little too excited here time for sleep.")
             print("Sleeping for " + str(seconds_to_sleep) + " seconds. Bye now!")
@@ -233,22 +228,6 @@ def loadJSONMatch(matchDict):
     gameCreation = matchDict['gameCreation']
 
     return LoLMatch(seasonId, queueId, gameId, participantIdentities, gameVersion, gameMode, mapId, gameType, teams, participants, gameDuration, gameCreation)
-
-
-'''
-    riotAPIHandler is intended to be the driver for pulling in data via the Riot APIs
-    (https://developer.riotgames.com/api-methods/). Until I figure out the data base we are going
-    to be straight up saving the JSON files dawg. I will be using a separate class to manipulate the data
-    stored in the JSON files. TODO: Have the file interaction class write to a data base (Mongo?)
-'''
-class RiotAPIHandler:
-    def __init__(self, apiKey, region='na1'):
-        self.key = apiKey
-        self.region = region
-
-    def __str__(self):
-        return ("Region: " + self.region +"\nKey: " + self.key)
-
 
 def appendNewProperty(name, value, propString):
     name = str(name)
