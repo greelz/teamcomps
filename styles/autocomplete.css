@@ -10,6 +10,7 @@
     height: 1.3em;
     font: 1em Segoe UI;
     padding: 4px;
+    list-style: none;
 }
 
 .autocomplete:hover {
