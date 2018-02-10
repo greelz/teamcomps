@@ -1,0 +1,62 @@
+.container {
+    background-color: black;
+}
+
+.header {
+    background-color: #4c4c4c;
+    color: white;
+}
+
+.btn-header {
+    background-color: #323232;
+    color: white;
+}
+
+.btn-header:hover {
+    background-color: #d8d8d8;
+}
+
+input, textarea {
+    border: 1px solid #999;
+    background-color: #323232;
+    color: white;
+}
+
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #b2b2b2;
+    opacity: 1; /* Firefox */
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: #b2b2b2;
+}
+
+::-ms-input-placeholder { /* Microsoft Edge */
+    color: #b2b2b2;
+}
+
+input:focus, textarea:focus {
+    border-color: #000;
+}
+
+input[type=button]:hover {
+    background-color: #191919;
+}
+
+.autocomplete {
+    box-shadow: 0px 5px 15px grey;
+    background-color: #323232;
+}
+
+.autocomplete li {
+    color: white;
+    border-bottom: 1px solid #4c4c4c;
+}
+
+.autocomplete li:hover {
+    background-color: #191919;
+}
+
+.highlighted_search {
+    background-color: #191919;
+}

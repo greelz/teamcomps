@@ -82,25 +82,6 @@ function searchResponse(response) {
     $("#totalGames").innerHTML = total_games;
     $("#bestChamp").innerHTML = champions_dicInv[best_champ];
     $("#wins").innerHTML = wins;
-    /*
-    Object.keys(response).forEach(function(key) {
-        champions = key.split(",");
-        if (champions.length === 5) {
-            champions = champions.sort(function(a, b) { 
-                a = Number(a);
-                b = Number(b);
-                if (given_champs.indexOf(a) > -1) {
-                    if (given_champs.indexOf(b) > -1) {
-                        return a > b;
-                    }
-                    return -1;
-                }
-                return (given_champs.indexOf(b) > -1) ? 1 : 0;
-            });
-            drawNewResult(champIdsToName(champions), response[key]['wins'] / response[key]['total_games'], response[key]['total_games']);
-        }
-    });
-    */
 }
 
 function drawNewResult(champ_list, winningPercentage, totalGames) {
@@ -141,13 +122,53 @@ function drawNewResult(champ_list, winningPercentage, totalGames) {
     var winPercent = winningPercentage * 100;
     addClass(cell, winPercent < 47 ? "red" : winPercent < 51 ? "orange" : "green");
     
-    
     // Add the table at the end
     responseSection.appendChild(table);
 }
 
-autocomplete($("#first_champion"), champions, addAnotherChampionSelector);
 
+// ---------- Theming ----------
+function changeTheme(mode, elem) {
+    if (!elem) elem = $("#themeButton");
+    $("#themeStylesheet").href = "styles/" + mode + "Theme.css";
+    var images = $$("img");
+    if (mode === "night") {
+        for (var i = 0; i < images.length; ++i) {
+            images[i].src = images[i].src.replace(".png", "Dark.png");
+        }
+        // Also, add a cookie to remember the style next time
+        setCookie("theme", "night");
+        elem.value = "Light Mode"
+    }
+    else {
+        for (var i = 0; i < images.length; ++i) {
+            images[i].src = images[i].src.replace("Dark.png", ".png");
+        }
+        setCookie("theme", "light");
+        elem.value = "Night Mode"
+    }
+}
+
+
+// ---------- Operations after loading the page ----------
+var inputs = $$(".champion_input");
+for (var elem in inputs) {
+    autocomplete(inputs[elem], champions, addAnotherChampionSelector);
+}
+
+if (getCookie("theme") === "night") {
+    changeTheme("night");
+}
+
+bindEvent($("#themeButton"), "click", function(event) {
+    var theme = getCookie("theme");
+    if (!theme || theme === "light") {
+        changeTheme("night", event.target);
+    }
+    else {
+        changeTheme("light", event.target);
+    }
+});
 
 var responseFromDatabase = {
     championGroups: { "AhriFiddlesticksBlitzcrankMalphite": {

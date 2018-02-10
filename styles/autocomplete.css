@@ -1,0 +1,17 @@
+.autocomplete {
+    max-height: 250px;
+    overflow: auto;
+    margin-top: 0px;
+    position: absolute;
+    width: inherit;
+}
+
+.autocomplete li {
+    height: 1.3em;
+    font: 1em Segoe UI;
+    padding: 4px;
+}
+
+.autocomplete:hover {
+    cursor: pointer;
+}

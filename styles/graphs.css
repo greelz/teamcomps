@@ -1,0 +1,45 @@
+.resultTable { 
+    width: 100%;
+    text-align: center;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.resultTable tr:hover {
+    background-color: #f4f4f4;
+}
+
+.resultTable td {
+    height: 2.5em;
+    font: .8em Segoe UI;
+    border-bottom: 1px solid black;
+    padding: 4px;
+}
+
+.resultTable .specialChamp {
+    font: 1em Segoe UI Semibold;
+}
+
+.resultTable .winningPercentage {
+    font: 1em Segoe UI Semibold;
+    width: 30px;
+    text-align: right;
+}
+
+.resultTable .barGraph {
+    margin: 0;
+    padding: 0;
+    width: 6px;
+}
+
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+.orange {
+    color: orange;
+}

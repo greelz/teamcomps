@@ -1,0 +1,56 @@
+.header {
+    background-color: #f1f1f1;
+}
+
+.btn-header {
+    background-color: #d9d9d9;
+    color: black;
+}
+
+.btn-header:hover {
+    background-color: #d8d8d8;
+}
+
+input, textarea {
+    border: 1px solid #999;
+}
+
+input:focus, textarea:focus {
+    border-color: #000;
+}
+
+input[type=button]:hover {
+    background-color: #d1d1d1;
+}
+
+.autocomplete {
+    background-color: #efefef;
+    box-shadow: 0px 5px 15px grey;
+}
+
+.autocomplete li {
+    color: black;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.highlighted_search {
+    background-color: #e3e3e3;
+}
+
+.autocomplete {
+    box-shadow: 0px 5px 15px grey;
+    background-color: #efefef;
+}
+
+.autocomplete li {
+    color: black;
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.highlighted_search {
+    background-color: #e3e3e3;
+}
+
+.autocomplete:hover {
+    cursor: pointer;
+}

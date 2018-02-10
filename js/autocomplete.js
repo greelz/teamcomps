@@ -2,8 +2,7 @@ function autocomplete(elem, source, callback)
 {
     // We want to allow someone to pass some callback
     // into the args parameter so that we can do something
-    // with the search
-    
+    // with the search    
     if (Array.isArray(source)) {
         source = source.sort();
         var associatedArray = [];
@@ -149,7 +148,7 @@ function autocomplete(elem, source, callback)
         if (callback) callback(val);
     }
     
-    document.addEventListener("click", function(event) {
+    bindEvent(document, "click", function(event) {
         if (searchTimer) clearTimeout(searchTimer);
         var searchTimer = setTimeout(function() {
             var autocomplete = $(".autocomplete");
@@ -160,7 +159,7 @@ function autocomplete(elem, source, callback)
         }, 100);
     });
     
-    elem.addEventListener("keydown", function(event) {
+    bindEvent(elem, "keydown", function(event) {
         if (event.keyCode === 13) { // enter key
             event.preventDefault();
         }
@@ -175,9 +174,9 @@ function autocomplete(elem, source, callback)
                 event.preventDefault();
             }
         }
-    })
-                
-    elem.addEventListener("keyup", function(event) {
+    });
+    
+    bindEvent(elem, "keyup", function(event) {
         if (event.keyCode === 13) { // enter key
             event.preventDefault();
             handleEnter();
@@ -201,5 +200,5 @@ function autocomplete(elem, source, callback)
         else if (event && event.target) {
             doOnDelay(search, 150);
         }
-    });    
+    });
 }

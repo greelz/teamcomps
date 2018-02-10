@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Best website ever!</title>
-        <link rel="stylesheet" type="text/css" href="styles/styles.css" />
+        <title>League Team Compositions</title>
+        <link rel="stylesheet" id="themeStylesheet" type="text/css" href="styles/lightTheme.css" />
+        <link rel="stylesheet" type="text/css" href="styles/alignment.css" />
+        <link rel="shortcut icon" type="image/png" href="images/logo40px.png"/>
+        <link rel="stylesheet" type="text/css" href="styles/autocomplete.css" />
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <!-- Put the navigation stuff here -->
-                <a href="index.html" class="logo-text"><img height="40px" src="images/logo.png" /></a>
-                <a href="#"><button class="btn-header">Ask a question</button></a>
-                <a href="about.html"><button class="btn-header">About</button></a>
-            </div>            
+                <a href="#"><img class="logoImg" src="images/logo40px.png" /></a>
+                <div class="headerText"><span>Teamcomp.org</span></div>
+                <input type="button" id="themeButton" class="btn-header" value="Night Mode" />
+            </div>
             <div class="main">
-                <div class="bigText">
-                    Team Composition
+                <div class="center">
+                    <img height="50px" src="images/logo50px.png" />
                 </div>
                 
-                <div class="lefthalf">
+                <div class="center">
                     <div id="championList">
-                        <input type="text" class="champion_input" id="first_champion" placeholder="Champion Name" />
+                        <input type="text" class="champion_input" placeholder="Champion" />
+                        <input type="text" class="champion_input" placeholder="Champion" />
+                        <input type="text" class="champion_input" placeholder="Champion" />
+                        <input type="text" class="champion_input" placeholder="Champion" />
+                        <input type="text" class="champion_input" placeholder="Champion" />
                     </div>
-                    <div>
-                        <input type="button" id="calculateComps" value="Search" onclick="search();" />
+                    <div id="actionButtons">                        
+                        <input type="button" id="calculateComps" value="Get Winning Percentage" onclick="search();" />
+                        <input type="button" id="calculateComps" value="Get Next Best Champ" onclick="search();" />
                     </div>
                 </div>
                 
                 <div class="righthalf">
-                    <div>
-                        <p>Winning Percentage: <span id="winPercentage">0</span><span>%</span></p>
-                        <p>Total games played: <span id="totalGames"></span></p>
-                        <p>Wins: <span id="wins"></span></p>
-                        <p>Best Champ: <span id="bestChamp"></span></p>
-                    <div>
                     <div id="recommendations">
                     </div>
                 </div>
                 
             </div>
         </div>
-        
-        
-
+        <script src="js/cookie.js"></script>
         <script src="js/generic.js"></script>
         <script src="js/autocomplete.js"></script>
         <script src="js/teamcomp.js"></script>

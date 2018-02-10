@@ -1,0 +1,97 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body, .container {
+    height: 100%;
+}
+
+.header {
+    height: 40px;
+    min-width: 500px;
+}
+
+.main {
+    padding: 0 10px 0 10px;
+    max-width: 850px;
+    min-width: 500px;
+    margin: 10px auto 0 auto;
+}
+
+.logoImg {
+    margin: 0 5px;
+}
+
+.btn-header {
+    cursor: pointer;
+    height: 100%;
+    margin-right: 3px;
+    vertical-align: top;
+    float: right;
+    width: 100px;
+    border-style: none;
+}
+
+.headerText {
+    font: 28px Garamond;
+    display: inline-block;
+    text-align: center;
+    vertical-align: top;
+    line-height: 40px;
+}
+
+input, textarea {
+    font: 1em Segoe UI;
+    width: 200px;
+    padding: 3px;
+    box-sizing: border-box;
+}
+
+.bigText {
+    font: 2em Segoe UI Semibold;
+    text-align: center;
+    padding: 10px;
+}
+
+#actionButtons {
+    padding: 10px;    
+}
+
+#actionButtons > input {
+    margin: 0 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#calculateComps {
+    height: 50px;
+    font-size: 25px;
+    margin-bottom: 3px;
+}
+
+#first_champion {
+    margin-top: 0;
+}
+
+#championList {
+    margin: 0 auto 5px auto;
+    width: 220px;
+    text-align: center;
+}
+
+.champion_input {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.center {
+    margin: 0 auto;
+    text-align: center;
+}
+
+#recommendations {
+    margin-bottom: 3px;
+}

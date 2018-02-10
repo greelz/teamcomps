@@ -68,6 +68,16 @@ function callAjax(url, callback, extra){
     }
 };
 
+// This fixes an issue where IE doesn't actually know what
+// addEventListener means... we'll use .attachEvent instead
+function bindEvent(el, eventName, eventHandler) {
+    if (el.addEventListener) {
+        el.addEventListener(eventName, eventHandler, false); 
+    } else if (el.attachEvent) {
+        el.attachEvent('on' + eventName, eventHandler);
+    }
+}
+
 // Polyfills *****************
 if (!String.prototype.startsWith) {
     String.prototype.startsWith = function(searchString, position){
