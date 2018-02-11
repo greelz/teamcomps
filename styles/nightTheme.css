@@ -60,3 +60,7 @@ input[type=button]:hover {
 .highlighted_search {
     background-color: #191919;
 }
+
+#recommendations {
+    color: white;
+}

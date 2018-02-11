@@ -134,7 +134,8 @@ module.exports = function(app, db) {
         generateDataForChampComp(db, prime_prod, (champDic) => {
             var winPercent = champDic["win_percent"];
             var totalGames = champDic["total_games"];
-            res.json( { "win_percent": winPercent, "total_games": totalGames });
+            var championIds = parseRequest(req);
+            res.json( { "win_percent": winPercent, "total_games": totalGames, "champIds": championIds });
         });
     });
 
@@ -158,7 +159,6 @@ module.exports = function(app, db) {
                             if (!(champion in champs)) {
                                 champs[champion] = { "wins": 0, "total_games": 0, "comps": {} };
                             }
-                            champs[champion]["comps"][champDic[key]["champArray"]] = 1;
                             champs[champion]["wins"] += champDic[key]["wins"];
                             champs[champion]["total_games"] += champDic[key]["total_games"];
                         }
@@ -171,7 +171,7 @@ module.exports = function(app, db) {
             for (i = 0; i < len; ++i) {
                 key = keys[i];
                 total_games = champs[key]["total_games"];
-                if (total_games > 10) {
+                if (total_games > 20) {
                     wins = champs[key]["wins"];
                     winPercent = wins / total_games;
                     if (winPercent > bestWinPercent) {
@@ -179,11 +179,10 @@ module.exports = function(app, db) {
                         bestWinPercent = winPercent;
                         bestChamp = key;
                         bestTotalGames = total_games;
-                        bestComps = champs[key]["comps"];
                     }
                 }
             }
-            return { "win_percent" : bestWinPercent, "champId" : bestChamp, "total_games" : bestTotalGames, "wins" : bestWins, "comps": bestComps };
+            return { "win_percent" : bestWinPercent, "champId" : bestChamp, "total_games" : bestTotalGames, "wins" : bestWins, "champIds": givenChamps };
         }
         var champArray = parseRequest(req);
         var prime_prod = getPrimeProductFromChampArray(champArray);

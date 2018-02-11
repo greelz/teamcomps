@@ -1,4 +1,4 @@
-function autocomplete(elem, source, callback)
+function autocomplete(elem, source, searchCallback, styleCallback)
 {
     // We want to allow someone to pass some callback
     // into the args parameter so that we can do something
@@ -14,63 +14,58 @@ function autocomplete(elem, source, callback)
     function handleEnter() {
         var li_item = $(".highlighted_search");
         if (li_item) {
-            // Then we just want to select that element and move on
-            // Add the full text, and do an "official search"
-            // TODO -- add the image to elem.parent as <img>
-            saveAutocompleteToInput(elem, li_item.innerText, 24);
-            doOfficialSearch(elem.value);
+            saveAutocompleteToInput(elem, li_item.innerText);
         }
         else {
             var li = $(".autocomplete li");
             // In this case, we have something that may be auto-completed
             // So we'll search the top result
             // Otherwise, either they're typing super fast, or they have random data
-            // And we'll try to search anyways
+            // in which case we'll do just remove the autocomplete popup
             if (li) {
-                saveAutocompleteToInput(elem, li.innerText, 24);
-                doOfficialSearch(li.innerText);
-            }
-            else {            
-                // Probably doing nothing here...
-                if (elem && elem.value && elem.value.length > 0) {
-                    doOfficialSearch(elem.value);
-                }
+                saveAutocompleteToInput(elem, li.innerText);
             }
         }
         removeElement($(".autocomplete"));
     }
 
-    function saveAutocompleteToInput(elem, champion_name, size) {
-        elem.value = champion_name;
-        var img = createChampionImg(champion_name, size);
-        img.style = "width: 31px; margin-top: 4px";
-        addClass(elem, "slimFromPic");
-        elem.parentNode.insertBefore(img, elem);
+    function createItemImage(item_name, size) {
+        var img = document.createElement("img");
+        img.src = styleCallback(item_name, size);
+        addClass(img, "left");
+        return img;
     }
 
-    function addListItem(champion_name, ul) {
+    function saveAutocompleteToInput(elem, item_name) {
+        elem.value = item_name;
+        if (styleCallback) {
+            addClass(elem, "slimFromPic");
+            var img = createItemImage(item_name, 31);
+            img.style = "margin-top: 4px";
+            elem.parentNode.insertBefore(img, elem);
+        }
+        if (searchCallback) {
+            searchCallback(item_name);
+        }
+    }
+
+    function addListItem(item_name, ul) {
         var li = document.createElement("li");
         li.addEventListener("click", function() {
-            saveAutocompleteToInput(elem, this.innerText, 48);
-            doOfficialSearch(this.innerText);
+            saveAutocompleteToInput(elem, this.innerText);
             removeElement($(".autocomplete"));
         });
         li.addEventListener("mousemove", function() {
             removeClass($(".highlighted_search"), "highlighted_search");
             addClass(this, "highlighted_search");
         });
+        li.innerHTML = item_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
         ul.appendChild(li);
-        li.innerHTML = champion_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
-        ul.insertBefore(createChampionImg(champion_name, 24), li);
+        if (styleCallback) {
+            ul.insertBefore(createItemImage(item_name, 28), li);
+        }
     }
 
-    function createChampionImg(champion, size) {
-        var img = document.createElement("img");
-        img.src = "images/champions/" + champion.replace(" ", "").replace(".", "").replace("'", "") + size + ".png";
-        addClass(img, "left");
-        return img;
-    }
-    
     function drawAutocomplete(suggestions) {
         // If the user is typing again, remove the img we created
         // if it exists
@@ -94,8 +89,8 @@ function autocomplete(elem, source, callback)
             var searchVal = elem.value.toLowerCase();
             if (typeof source === "string") {
                 callAjax(source + searchVal, function(response) {
-                    var champs = JSON.parse(response);
-                    drawAutocomplete(champs);
+                    var result = JSON.parse(response);
+                    drawAutocomplete(result);
                 });
             }
             else {
@@ -170,10 +165,6 @@ function autocomplete(elem, source, callback)
         }
     }
 
-    function doOfficialSearch(val) {
-        if (callback) callback(val);
-    }
-    
     bindEvent(document, "click", function(event) {
         if (searchTimer) clearTimeout(searchTimer);
         var searchTimer = setTimeout(function() {
@@ -206,7 +197,6 @@ function autocomplete(elem, source, callback)
         if (event.keyCode === 13) { // enter key
             event.preventDefault();
             handleEnter();
-            addAnotherChampionSelector();
         }
         else if (event.keyCode === 40) { // down arrow
             event.preventDefault();

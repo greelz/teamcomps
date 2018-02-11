@@ -99,3 +99,16 @@ input, textarea {
 #recommendations {
     margin-bottom: 3px;
 }
+
+.tableCenter {
+    width: auto;
+    margin: 8px auto;
+}
+
+.tableCenter td {
+    padding: 0 5px;
+}
+
+#recommendations p {
+    font: 20px Garamond;
+}

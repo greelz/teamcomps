@@ -11,13 +11,13 @@
         <div class="container">
             <div class="header">
                 <!-- Put the navigation stuff here -->
-                <a href="#"><img class="logoImg" src="images/logo40px.png" /></a>
+                <a href="#"><img class="logoImg themed" src="images/logo40px.png" /></a>
                 <div class="headerText"><span>Teamcomp.org</span></div>
                 <input type="button" id="themeButton" class="btn-header" value="Night Mode" />
             </div>
             <div class="main">
                 <div class="center">
-                    <img height="50px" src="images/logo50px.png" />
+                    <img height="50px" class="themed" src="images/logo50px.png" />
                 </div>
                 
                 <div class="center">
@@ -42,15 +42,13 @@
                         <input type="button" id="winPercentBtn" value="Get Winning Percentage" />
                         <input type="button" id="nextBestChampBtn" value="Get Next Best Champ" />
                     </div>
+                    <div id="recommendations"></div>
                 </div>
-                
-                <div class="righthalf">
-                    <div id="recommendations">
-                    </div>
-                </div>
+
                 
             </div>
         </div>
+        <script src="js/champions.js"></script>
         <script src="js/cookie.js"></script>
         <script src="js/generic.js"></script>
         <script src="js/autocomplete.js"></script>
