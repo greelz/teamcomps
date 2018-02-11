@@ -63,14 +63,14 @@ function generateDataForChampComp(db, prime_prod, callback) {
     // Every team comp, w/ { total_games: <n>, wins: <n>, ... }
     // Some way to dive into that value, maybe a get request key or something... for later
 
-    var now = console.time("generateDataForChampComp"), game, wins = 0, games = 0, winPercent = 0,
-            cursor = db.collection("games").find( { 'comp_key' : { $mod : [prime_prod, 0 ] } }),
+    var game, wins = 0, games = 0, winPercent = 0,
+            cursor = db.collection("games").find( { 'comp_key' : { $mod : [prime_prod, 0 ] } }).limit(50000),
             numGames = 0, champDictionary, champPrimeProd;
     champDictionary = { '_id': prime_prod };
     cursor.each( (err, game) => {
         // Let's stop at 20,000 games since that's a ton of results and
         // won't really affect the results too much (IMO)
-        if (game && numGames < 20000) {
+        if (game) {
             numGames += 1;
             champPrimeProd = game['comp_key'];
             if (champDictionary[champPrimeProd] === undefined) {
@@ -86,7 +86,6 @@ function generateDataForChampComp(db, prime_prod, callback) {
             winPercent = wins / numGames;
             champDictionary["win_percent"] = winPercent;
             champDictionary["total_games"] = numGames;
-            console.timeEnd("generateDataForChampComp");
             callback(champDictionary);
         }
     });

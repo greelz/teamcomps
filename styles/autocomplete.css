@@ -3,7 +3,7 @@
     overflow: auto;
     margin-top: 0px;
     position: absolute;
-    width: inherit;
+    width: 220px;
 }
 
 .autocomplete li {
@@ -15,4 +15,8 @@
 
 .autocomplete:hover {
     cursor: pointer;
+}
+
+.slimFromPic {
+    width: 189px;
 }

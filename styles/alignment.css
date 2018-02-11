@@ -60,14 +60,10 @@ input, textarea {
 
 #actionButtons > input {
     margin: 0 10px;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
-}
-
-#calculateComps {
     height: 50px;
-    font-size: 25px;
-    margin-bottom: 3px;
+    width: 200px;
 }
 
 #first_champion {
@@ -90,6 +86,14 @@ input, textarea {
 .center {
     margin: 0 auto;
     text-align: center;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
 }
 
 #recommendations {

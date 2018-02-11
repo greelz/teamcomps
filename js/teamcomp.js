@@ -45,7 +45,7 @@ function addChampionSearchElem() {
     new_elem.focus();
 }
 
-function search() {
+function search(url) {
     var champions = $$(".champion_input");
     var query = "";
     for (var node = 0; node < champions.length; ++node) {
@@ -57,7 +57,7 @@ function search() {
     }
     if (query.length > 0) {
         query = query.substring(1);
-        callAjax("http://127.0.0.1:8000/nextbestchamp?" + query, searchResponse);
+        callAjax(url + query, searchResponse);
     }
 }
 
@@ -129,23 +129,27 @@ function drawNewResult(champ_list, winningPercentage, totalGames) {
 
 // ---------- Theming ----------
 function changeTheme(mode, elem) {
-    if (!elem) elem = $("#themeButton");
-    $("#themeStylesheet").href = "styles/" + mode + "Theme.css";
+    var noChangesNecessary = $("#themeStylesheet").href.endsWith(mode + "Theme.css");
     var images = $$("img");
-    if (mode === "night") {
-        for (var i = 0; i < images.length; ++i) {
-            images[i].src = images[i].src.replace(".png", "Dark.png");
+
+    if (!noChangesNecessary) {
+        if (!elem) elem = $("#themeButton");
+        if (mode === "light") {
+            $("#themeStylesheet").href = "styles/lightTheme.css";
+            for (var i = 0; i < images.length; ++i) {
+                images[i].src = images[i].src.replace("Dark.png", ".png");
+            }
+            setCookie("theme", "light");
+            elem.value = "Night Mode"
         }
-        // Also, add a cookie to remember the style next time
-        setCookie("theme", "night");
-        elem.value = "Light Mode"
-    }
-    else {
-        for (var i = 0; i < images.length; ++i) {
-            images[i].src = images[i].src.replace("Dark.png", ".png");
+        else if (mode === "night") {
+            $("#themeStylesheet").href = "styles/nightTheme.css";
+            for (var i = 0; i < images.length; ++i) {
+                images[i].src = images[i].src.replace(".png", "Dark.png");
+            }
+            setCookie("theme", "night");
+            elem.value = "Light Mode"
         }
-        setCookie("theme", "light");
-        elem.value = "Night Mode"
     }
 }
 
@@ -161,13 +165,20 @@ if (getCookie("theme") === "night") {
 }
 
 bindEvent($("#themeButton"), "click", function(event) {
-    var theme = getCookie("theme");
-    if (!theme || theme === "light") {
+    if (event.target.value === "Night Mode") {
         changeTheme("night", event.target);
     }
     else {
         changeTheme("light", event.target);
     }
+});
+
+bindEvent($("#winPercentBtn"), "click", function(event) {
+    search("http://127.0.0.1:8000/winPercentage?");
+});
+
+bindEvent($("#nextBestChampBtn"), "click", function(event) {
+    search("http://127.0.0.1:8000/nextbestchamp?");
 });
 
 var responseFromDatabase = {

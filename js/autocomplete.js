@@ -16,20 +16,22 @@ function autocomplete(elem, source, callback)
         if (li_item) {
             // Then we just want to select that element and move on
             // Add the full text, and do an "official search"
-            elem.value = li_item.innerText;
+            // TODO -- add the image to elem.parent as <img>
+            saveAutocompleteToInput(elem, li_item.innerText, 24);
             doOfficialSearch(elem.value);
         }
         else {
-            var ac = $(".autocomplete");
+            var li = $(".autocomplete li");
             // In this case, we have something that may be auto-completed
             // So we'll search the top result
             // Otherwise, either they're typing super fast, or they have random data
             // And we'll try to search anyways
-            if (ac && ac.firstChild && ac.firstChild.firstChild) {
-                elem.value = ac.firstChild.firstChild.innerText;
-                doOfficialSearch(ac.firstChild.firstChild.innerText);
+            if (li) {
+                saveAutocompleteToInput(elem, li.innerText, 24);
+                doOfficialSearch(li.innerText);
             }
             else {            
+                // Probably doing nothing here...
                 if (elem && elem.value && elem.value.length > 0) {
                     doOfficialSearch(elem.value);
                 }
@@ -37,36 +39,49 @@ function autocomplete(elem, source, callback)
         }
         removeElement($(".autocomplete"));
     }
+
+    function saveAutocompleteToInput(elem, champion_name, size) {
+        elem.value = champion_name;
+        var img = createChampionImg(champion_name, size);
+        img.style = "width: 31px; margin-top: 4px";
+        addClass(elem, "slimFromPic");
+        elem.parentNode.insertBefore(img, elem);
+    }
+
+    function addListItem(champion_name, ul) {
+        var li = document.createElement("li");
+        li.addEventListener("click", function() {
+            saveAutocompleteToInput(elem, this.innerText, 48);
+            doOfficialSearch(this.innerText);
+            removeElement($(".autocomplete"));
+        });
+        li.addEventListener("mousemove", function() {
+            removeClass($(".highlighted_search"), "highlighted_search");
+            addClass(this, "highlighted_search");
+        });
+        ul.appendChild(li);
+        li.innerHTML = champion_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
+        ul.insertBefore(createChampionImg(champion_name, 24), li);
+    }
+
+    function createChampionImg(champion, size) {
+        var img = document.createElement("img");
+        img.src = "images/champions/" + champion.replace(" ", "").replace(".", "").replace("'", "") + size + ".png";
+        addClass(img, "left");
+        return img;
+    }
     
     function drawAutocomplete(suggestions) {
+        // If the user is typing again, remove the img we created
+        // if it exists
         var autocomplete_elem = $(".autocomplete");
         removeElement(autocomplete_elem);
         var node = document.createElement("div");
         addClass(node, "autocomplete");
-        node.addEventListener("mouseleave", function() {
-            node.setAttribute("data-lostfocus", true);
-        });
-        
-        node.addEventListener("focus", function() {
-            node.setAttribute("data-lostfocus", false); 
-        });
-        
         var ul = document.createElement("ul");
         node.appendChild(ul);
         for (var i = 0; i < suggestions.length; ++i) {
-            var li = document.createElement("li");
-            li.addEventListener("click", function() {
-                elem.value = this.innerText;
-                doOfficialSearch(this.innerText);
-                removeElement($(".autocomplete"));
-            });
-            li.addEventListener("mousemove", function() {
-                removeClass($(".highlighted_search"), "highlighted_search");
-                addClass(this, "highlighted_search");
-            });
-            ul.appendChild(li);
-            var champion_name = suggestions[i];
-            li.innerHTML = champion_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
+            addListItem(suggestions[i], ul);
         }
         // Don't add if you aren't the active element anymore (they hit enter or smth)
         if (elem == document.activeElement) {
@@ -120,25 +135,36 @@ function autocomplete(elem, source, callback)
         if (autocomplete)
         {
             var currentAutocomplete = $(".highlighted_search");
+            var items = $$(".autocomplete li");
             if (currentAutocomplete) {
                 removeClass(currentAutocomplete, "highlighted_search");
-                if (direction === "up") {
-                    if (currentAutocomplete.previousSibling) {
-                        addClass(currentAutocomplete.previousSibling, "highlighted_search");
+                // Find the index of the autocomplete element
+                // so we can scroll to the next item properly
+                for (var i = 0; i < items.length; ++i) {
+                    if (items[i] === currentAutocomplete) {
+                        break;
                     }
                 }
+                if (direction === "up") {
+                    if (i === 0) i = items.length - 1;
+                    else i -= 1;
+                    addClass(items[i], "highlighted_search");
+                    items[0].parentNode.parentNode.scrollTop = items[i].offsetTop - 50;
+                }
                 else {
-                    if (currentAutocomplete.nextSibling) {
-                        addClass(currentAutocomplete.nextSibling, "highlighted_search");
-                    }
+                    if (i >= items.length - 1) i = 0;
+                    else i += 1;
+                    addClass(items[i], "highlighted_search");
+                    items[0].parentNode.parentNode.scrollTop = items[i].offsetTop - 50;
                 }
             }
             else {
                 if (direction === "up") {
-                    addClass(autocomplete.firstChild.lastChild, "highlighted_search");
+                    addClass(items[items.length - 1], "highlighted_search");
+                    items[0].parentNode.parentNode.scrollTop = items[items.length - 1].offsetTop - 50;
                 }
                 else {
-                    addClass(autocomplete.firstChild.firstChild, "highlighted_search");
+                    addClass(items[0], "highlighted_search");
                 }
             }
         }
@@ -198,6 +224,8 @@ function autocomplete(elem, source, callback)
             }
         }
         else if (event && event.target) {
+            removeClass(elem, "slimFromPic");
+            removeElement(elem.previousSibling);
             doOnDelay(search, 150);
         }
     });
