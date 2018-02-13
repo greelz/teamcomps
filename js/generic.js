@@ -1,8 +1,11 @@
-var $ = function(selector) {
+'use strict';
+/*global document, window, XMLHttpRequest */
+/*jslint bitwise: true */
+var $ = function (selector) {
     return document.querySelector(selector);
 };
 
-var $$ = function(selector) {
+var $$ = function (selector) {
     return document.querySelectorAll(selector);
 };
 
@@ -20,7 +23,7 @@ function addClass(elem, newClass) {
 
 function removeClass(elem, oldClass) {
     if (hasClass(elem, oldClass)) {
-        elem.className = elem.className.replace(" " + oldClass,"");
+        elem.className = elem.className.replace(" " + oldClass, "");
     }
 }
 
@@ -34,45 +37,40 @@ function removeElement(elem) {
     }
 }
 
-function doOnDelay(callback, delay)
-{
-    if (searchTimer) clearTimeout(searchTimer);
-    var searchTimer = setTimeout(function() {
+function doOnDelay(callback, delay) {
+    setTimeout(function () {
         callback();
     }, delay);
 }
 
-function callAjax(url, callback, extra){
-    if(window.XMLHttpRequest) {
+function callAjax(url, callback) {
+    if (window.XMLHttpRequest) {
         var oReq = new XMLHttpRequest();
-        if(oReq.withCredentials == true) {
+        if (oReq.withCredentials === true) {
             oReq.open("GET", url, true);
-            oReq.onload = function() {
-                if (oReq.readyState == 4 && oReq.status == 200) {
+            oReq.onload = function () {
+                if (oReq.readyState === 4 && oReq.status === 200) {
                     callback(oReq.responseText);
                 }
-            }            
-            oReq.send( null );
+            };
+            oReq.send(null);
         } else {
             oReq.open("GET", url, true);
-            oReq.onload = function() {
-                if (oReq.readyState == 4 && oReq.status == 200) {
+            oReq.onload = function () {
+                if (oReq.readyState === 4 && oReq.status === 200) {
                     callback(oReq.responseText);
                 }
-            }
-            oReq.send( null );
+            };
+            oReq.send(null);
         }
-    } 
-    else {
-        // XMLHttpRequest not supported; handle fallback
     }
-};
+}
 
 // This fixes an issue where IE doesn't actually know what
 // addEventListener means... we'll use .attachEvent instead
 function bindEvent(el, eventName, eventHandler) {
     if (el.addEventListener) {
-        el.addEventListener(eventName, eventHandler, false); 
+        el.addEventListener(eventName, eventHandler, false);
     } else if (el.attachEvent) {
         el.attachEvent('on' + eventName, eventHandler);
     }
@@ -80,21 +78,20 @@ function bindEvent(el, eventName, eventHandler) {
 
 // Polyfills *****************
 if (!String.prototype.startsWith) {
-    String.prototype.startsWith = function(searchString, position){
+    String.prototype.startsWith = function (searchString, position) {
         return this.substr(position || 0, searchString.length) === searchString;
     };
 }
 
 if (!String.prototype.endsWith) {
-    String.prototype.endsWith = function(searchStr, position) {
+    String.prototype.endsWith = function (searchStr, position) {
         // This works much better than >= because
         // it compensates for NaN:
         if (!(position < this.length)) {
             position = this.length;
-        }
-        else {
+        } else {
             position |= 0; // round position
         }
         return this.substr(position - searchStr.length, searchStr.length) === searchStr;
-    }
-};
+    };
+}
