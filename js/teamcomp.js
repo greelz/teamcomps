@@ -207,5 +207,9 @@ bindEvent($("#winPercentBtn"), "click", function () {
 });
 
 bindEvent($("#nextBestChampBtn"), "click", function () {
-    search("http://teamcomp.org:8000/nextbestchamp?", bestChampCallback);
+    search("http://127.0.0.1:8000/nextbestchamp?", bestChampCallback);
+});
+
+callAjax("http://127.0.0.1:8000/totalGames", function (response) {
+    $("#totalGames").innerText = response + " games.";    
 });
