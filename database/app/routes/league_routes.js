@@ -67,8 +67,6 @@ function generateDataForChampComp(db, prime_prod, callback) {
         cursor = db.collection("games").find({ 'comp_key' : { $mod : [prime_prod, 0 ]}}).limit(50000),
         champDictionary = { '_id': prime_prod };
     cursor.each(function (err, game) {
-        // Let's stop at 20,000 games since that's a ton of results and
-        // won't really affect the results too much (IMO)
         if (!err && game) {
             numGames += 1;
             champPrimeProd = game.comp_key;

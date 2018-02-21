@@ -43,13 +43,16 @@ function doOnDelay(callback, delay) {
     }, delay);
 }
 
-function callAjax(url, callback) {
+function callAjax(url, callback, interval) {
     if (window.XMLHttpRequest) {
         var oReq = new XMLHttpRequest();
         if (oReq.withCredentials === true) {
             oReq.open("GET", url, true);
             oReq.onload = function () {
                 if (oReq.readyState === 4 && oReq.status === 200) {
+                    if (interval) {
+                        clearInterval(interval);
+                    }
                     callback(oReq.responseText);
                 }
             };
@@ -58,6 +61,9 @@ function callAjax(url, callback) {
             oReq.open("GET", url, true);
             oReq.onload = function () {
                 if (oReq.readyState === 4 && oReq.status === 200) {
+                    if (interval) {
+                        clearInterval(interval);
+                    }
                     callback(oReq.responseText);
                 }
             };

@@ -60,7 +60,7 @@ function getChampionImgSrc(champion, size) {
 }
 
 function search(url, callback) {
-    var champions = $$(".champion_input"), query, node, champ, champFromDic;
+    var champions = $$(".champion_input"), query, node, champ, champFromDic, searchCallback;
     query = "";
     for (node = 0; node < champions.length; node += 1) {
         champ = champions[node].value;
@@ -71,12 +71,32 @@ function search(url, callback) {
     }
     if (query.length > 0) {
         query = query.substring(1);
-        callAjax(url + query, callback);
+        drawPhrasesAndSearch(url + query, callback);
     }
 }
 
 
 // --------- Request Callbacks -----------
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
+
+function drawPhrasesAndSearch(url, callback) {
+    // Not sure I love this one yet... but it let's us do callbacks with an interval
+    // and guarantee that we can end the interval with the second callback
+    var phrases, parentElem, numPhrases, drawingInterval;
+    callAjax("http://teamcomp.org:8000/coolPhrases", function (response) {
+        phrases = JSON.parse(response);
+        numPhrases = phrases.length;
+        parentElem = $("#recommendations");
+        parentElem.innerHTML = phrases[getRandomInt(numPhrases)];
+        drawingInterval = setInterval(function () {
+            parentElem.innerHTML = phrases[getRandomInt(numPhrases)];
+        }, 700);
+        callAjax(url, callback, drawingInterval);
+    });
+}
 
 function createChampionTable(champIds) {
     var i = 0, table, row, cell, img;
@@ -207,9 +227,9 @@ bindEvent($("#winPercentBtn"), "click", function () {
 });
 
 bindEvent($("#nextBestChampBtn"), "click", function () {
-    search("http://127.0.0.1:8000/nextbestchamp?", bestChampCallback);
+    search("http://teamcomp.org:8000/nextbestchamp?", bestChampCallback);
 });
 
-callAjax("http://127.0.0.1:8000/totalGames", function (response) {
+callAjax("http://teamcomp.org:8000/totalGames", function (response) {
     $("#totalGames").innerText = response + " games.";    
 });

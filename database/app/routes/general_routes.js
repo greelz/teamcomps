@@ -17,4 +17,17 @@ module.exports = function (app, db) {
             res.json(result);
         });
     });
+
+    app.get("/coolPhrases", function (req, res) {
+        var list = [];
+        db.collection("phrases").find({}, function (err, cursor) {
+            cursor.each(function (err, elem) {
+                if (!err && elem) {
+                    list.push(elem.phrase);
+                } else {
+                    res.json(list);
+                }
+            });
+        });
+    });
 };
