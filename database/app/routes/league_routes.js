@@ -64,7 +64,7 @@ function generateDataForChampComp(db, prime_prod, callback) {
     //     '<champCompAsPrime>': {'wins': N, 'total_games': M, 'champArray': [id1, id2, id3, id4, id5]}
     // }
     var wins = 0, winPercent = 0, numGames = 0, champPrimeProd,
-        cursor = db.collection("games").find({ 'comp_key' : { $mod : [prime_prod, 0 ]}}).limit(50000),
+        cursor = db.collection("games").find({ 'comp_key' : { $mod : [prime_prod, 0 ]}}),
         champDictionary = { '_id': prime_prod };
     cursor.each(function (err, game) {
         if (!err && game) {
