@@ -112,6 +112,10 @@ input[type=button] {
     margin-bottom: 3px;
 }
 
+#recommendations img {
+    height: 48px;
+}
+
 .tableCenter {
     width: auto;
     margin: 8px auto;
