@@ -1,5 +1,10 @@
 body {
-    background: url("../images/background.png") repeat
+    background: url("../images/background.png") no-repeat center center fixed;
+    background-repeat: space round;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
 }
 
 .header {

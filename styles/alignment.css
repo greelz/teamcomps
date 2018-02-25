@@ -7,6 +7,13 @@ html, body, .container {
     height: 100%;
 }
 
+.main {
+    padding: 0 10px 0 10px;
+    max-width: 850px;
+    min-width: 500px;
+    margin: 10px auto 0 auto;
+}
+
 .header {
     height: 50px;
     min-width: 500px;
@@ -14,13 +21,6 @@ html, body, .container {
 
 .headerText > a {
     text-decoration: none;
-}
-
-.main {
-    padding: 0 10px 0 10px;
-    max-width: 850px;
-    min-width: 500px;
-    margin: 10px auto 0 auto;
 }
 
 .logoImg {
