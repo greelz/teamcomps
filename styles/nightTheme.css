@@ -7,13 +7,12 @@
     color: white;
 }
 
-.btn-header {
-    background-color: #323232;
+.headerText > a {
     color: white;
 }
 
-.btn-header:hover {
-    background-color: #d8d8d8;
+.bigText {
+    color: white;
 }
 
 input, textarea {

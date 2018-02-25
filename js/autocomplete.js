@@ -17,9 +17,9 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
 
     // --------- DOM Manipulation ----------
 
-    function createItemImage(item_name, size) {
+    function createItemImage(item_name) {
         var img = document.createElement("img");
-        img.src = styleCallback(item_name, size);
+        img.src = styleCallback(item_name);
         addClass(img, "left");
         return img;
     }
@@ -67,7 +67,7 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
         li.innerHTML = item_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
         ul.appendChild(li);
         if (styleCallback) {
-            ul.insertBefore(createItemImage(item_name, 28), li);
+            ul.insertBefore(createItemImage(item_name), li);
         }
     }
 

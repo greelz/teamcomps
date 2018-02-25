@@ -1,18 +1,39 @@
+body {
+    background: url("../images/background.png") repeat
+}
+
 .header {
-    background-color: #e5e5e5;
+    background-color: black;
+    opacity: .8;
 }
 
-.btn-header {
-    background-color: #d9d9d9;
-    color: black;
+.headerText {
+    color: white;
 }
 
-.btn-header:hover {
-    background-color: #d8d8d8;
+.headerText:hover {
+    color: #fdffba;
+}
+
+.headerText > a {
+    color: white;
+}
+
+.headerText > a:hover {
+    color: #fdffba;
+    text-decoration: none;
 }
 
 input, textarea {
     border: 1px solid #999;
+}
+
+#actionButtons > input[type=button] {
+    background-color: green;
+}
+
+#actionButtons > input[type=button]:hover {
+    background-color: #009900;
 }
 
 input:focus, textarea:focus {

@@ -48,12 +48,12 @@ function getChampionName(val) {
     return null;
 }
 
-function getChampionImgSrc(champion, size) {
+function getChampionImgSrc(champion) {
     // Since we'll have the champion display name, reformat it to
     // grab the champion key
     var champKey = getChampionKey(champion);
     if (champKey) {
-        return "images/champions/" + champKey + size + ".png";
+        return "images/champions/" + champKey + ".png";
     }
     console.log("Couldn't find an image for: " + champion + ".");
     return null;
@@ -110,7 +110,7 @@ function createChampionTable(champIds) {
 
         // Champion Image
         img = document.createElement("img");
-        img.src = getChampionImgSrc(champIds[i], 48);
+        img.src = getChampionImgSrc(champIds[i]);
         cell.appendChild(img);
 
     }
@@ -190,14 +190,14 @@ function changeTheme(mode, elem) {
                 images[i].src = images[i].src.replace("Dark.png", ".png");
             }
             setCookie("theme", "light");
-            elem.value = "Night Mode";
+            elem.innerText = "Night Mode";
         } else if (mode === "night") {
             $("#themeStylesheet").href = "styles/nightTheme.css";
             for (i = 0; i < images.length; i += 1) {
                 images[i].src = images[i].src.replace(".png", "Dark.png");
             }
             setCookie("theme", "night");
-            elem.value = "Light Mode";
+            elem.innerText = "Light Mode";
         }
     }
 }
@@ -215,7 +215,7 @@ if (getCookie("theme") === "night") {
 }
 
 bindEvent($("#themeButton"), "click", function (event) {
-    if (event.target.value === "Night Mode") {
+    if (event.target.innerText === "Night Mode") {
         changeTheme("night", event.target);
     } else {
         changeTheme("light", event.target);
