@@ -17,6 +17,10 @@
     cursor: pointer;
 }
 
+.autocomplete ul > img {
+    height: 29px;
+}
+
 .slimFromPic {
     width: 189px;
 }

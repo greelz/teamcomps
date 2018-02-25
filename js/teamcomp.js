@@ -53,7 +53,7 @@ function getChampionImgSrc(champion) {
     // grab the champion key
     var champKey = getChampionKey(champion);
     if (champKey) {
-        return "images/champions/" + champKey + ".png";
+        return "images/champions/" + champKey + "48.png";
     }
     console.log("Couldn't find an image for: " + champion + ".");
     return null;
