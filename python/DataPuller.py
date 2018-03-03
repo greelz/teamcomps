@@ -5,7 +5,6 @@ import pprint
 import time
 from enum import Enum
 
-#ToDo - All APIs are currently using NA data
 current_key_index = 0
 sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
@@ -25,74 +24,31 @@ class riotAPIStatusCodes(Enum):
     SERVICEUNAVAILABLE = 503
     GATEWAYTIMEOUT = 504
 
-def getParticipantsAboveTier():
-    #TODO implement later to restrict people we search over
-    return ""
-
-
-def getWinningChamps(matchDict):
-    #Get id of winning team first
-    winningTeamId = ""
-    winningChamps=[]
-    for team in matchDict['teams']:
-        if team['win']=="Win":
-            winningTeamId = team['teamId']
-    if winningTeamId == "":
-        return ""
-
-    #now find each participant that was on the winning team
-    for participant in matchDict['participants']:
-        if participant['teamId']!=winningTeamId:
-            continue
-        winningChamps.append(participant['championId'])
-    return winningChamps
-
-def getAllMatchWinningChamps(matchListJSON,f="winners.txt"):
-    winnerDict = {}
-    with open(f,'a') as the_file:
-
-        for match in matchListJSON:
-            winningChamps = getWinningChamps(match)
-            matchId = match['gameId']
-            matchString = str(matchId) + ":" + str(winningChamps)
-            the_file.write(matchString + "\n")
-
-    return
-
-def writeMatchesToFile(matchListJSON):
-    prefix = 'SampleData\\MatchDumps\\'
-    for match in matchListJSON:
-        matchId = match['gameId']
-        file = prefix+str(matchId)+'.json'
-        with open(file,'w') as fh:
-            json.dump(match,fh)
-
-def getAllSampleData(dump="allWinners.txt"):
-    sampleFiles=["matches1.json","matches2.json","matches3.json","matches4.json","matches5.json","matches6.json"]
-
-    for f in sampleFiles:
-        fullFile="sampleData\\"+fs
-        data = json.load(open(fullFile),encoding='latin=1')
-        getAllMatchWinningChamps(data['matches'],dump)
-    return
-
-def writeAllSampleMatchesToFile():
-    sampleFile = 'sampleData\\matches1.json'
-    data = json.load(open(sampleFile),encoding='latin=1')
-    writeMatchesToFile(data['matches'])
-
-def getMatchesByAccountId(accountID, region, callback, queue = ""):
+def getMatchesByAccountId(accountID, region = "na1", queue = ""):
     url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
     if queue != "":
         url += "?queue=" + str(queue)
-    print(url)
-    return requestWrapper(url, callback)
+    return requestWrapper(url)
 
-def getMatch(matchId, region, callback):
+def getMatch(matchId, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/match/v3/matches/" + str(matchId)
-    return requestWrapper(url, callback)
+    return requestWrapper(url)
 
-def requestWrapper(url, callback, headers = {}):
+def getAccountIdByName(name, region = "na1"):
+    url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-name/" + str(name)
+    res = requestWrapper(url)
+    if res is not None:
+        return res.json["accountId"]
+    return None
+
+def getAccountNameById(playerId, region = "na1"):
+    url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-account/" + str(playerId)
+    res = requestWrapper(url)
+    if res is not None:
+        return res.json["name"]
+    return None
+
+def requestWrapper(url, headers = {}):
     ''' Algorithm: 
         1. Get the request using the current API_KEY
         2. If we need to sleep, then process then match and flip API_KEYS (for the next request)
@@ -112,13 +68,10 @@ def requestWrapper(url, callback, headers = {}):
 
     if r.sleepTime > 0:
         print("Hit our limit on api_key #" + str(current_key_index))
-        if callback:
-            callback()
         current_time = unix_time_millis(datetime.datetime.now())
         sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
         current_key_index += 1
         if current_key_index >= len(API_KEYS):
-            print("Resetting key index to 0.")
             current_key_index = 0
 
         if current_time < sleep_until_times[current_key_index]:
