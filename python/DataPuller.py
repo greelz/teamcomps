@@ -6,6 +6,7 @@ import time
 from enum import Enum
 
 current_key_index = 0
+API_KEYS = ["RGAPI-8bd1fde2-ecb4-44d7-b9a5-9515c9a551fa"]
 sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = 420
@@ -37,16 +38,17 @@ def getMatch(matchId, region = "na1"):
 def getAccountIdByName(name, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-name/" + str(name)
     res = requestWrapper(url)
-    if res is not None:
+    try:
         return res.json["accountId"]
-    return None
+    except KeyError:
+        return None
 
 def getAccountNameById(playerId, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-account/" + str(playerId)
     res = requestWrapper(url)
     if res is not None:
         return res.json["name"]
-    return None
+    return ""
 
 def requestWrapper(url, headers = {}):
     ''' Algorithm: 
@@ -59,40 +61,40 @@ def requestWrapper(url, headers = {}):
     headers[KEY_HEADER] = API_KEYS[current_key_index]
     r = responseObject(requests.get(url, headers = headers))
 
-    # First check if something went wrong (I'm not sure if this has ever really
-    # been hit). 
-    if not r or (str(r.statusCode) != str(riotAPIStatusCodes.SUCCESS.value)):
-        print('Something went wrong in Whoville')
-        print(r.statusCode)
-        return None
+    if r:
+        # First check if something went wrong (I'm not sure if this has ever really
+        # been hit). 
+        if r.statusCode != 200:
+            print('Something went wrong in Whoville, status code ' + str(r.statusCode))
 
-    if r.sleepTime > 0:
-        print("Hit our limit on api_key #" + str(current_key_index))
-        current_time = unix_time_millis(datetime.datetime.now())
-        sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
-        current_key_index += 1
-        if current_key_index >= len(API_KEYS):
-            current_key_index = 0
+        if r.sleepTime > 0:
+            print("Hit our limit on api_key #" + str(current_key_index))
+            current_time = unix_time_millis(datetime.datetime.now())
+            sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
+            current_key_index += 1
+            if current_key_index >= len(API_KEYS):
+                current_key_index = 0
 
-        if current_time < sleep_until_times[current_key_index]:
-            seconds_to_sleep = int((sleep_until_times[current_key_index] - current_time) / 1000.0) + 1 #add 1 to be safe :)
-            print("We're getting a little too excited here time for sleep.")
-            print("Sleeping for " + str(seconds_to_sleep) + " seconds. Bye now!")
-            time.sleep(seconds_to_sleep) 
-        else:
-            sleep_until_times[current_key_index] = 0
+            if current_time < sleep_until_times[current_key_index]:
+                seconds_to_sleep = int((sleep_until_times[current_key_index] - current_time) / 1000.0) + 1 #add 1 to be safe :)
+                print("We're getting a little too excited here time for sleep.")
+                print("Sleeping for " + str(seconds_to_sleep) + " seconds. Bye now!")
+                time.sleep(seconds_to_sleep) 
+            else:
+                sleep_until_times[current_key_index] = 0
 
     return r
     
 epoch = datetime.datetime.utcfromtimestamp(0)
-def unix_time_millis(dt):
+def unix_time_millis(dt = None):
+    if not dt:
+        dt = datetime.datetime.now()
     return (dt - epoch).total_seconds() * 1000.0
 
 class responseObject:
     def  __init__(self, request):
         self.json = request.json()
         self.statusCode = request.status_code
-        #Deal With Rate limits
         '''
             rateLimit (rl) and rateLimitCount (rlc) come in as two comma
             delimited lists. rl contains the definition for the rate limits
@@ -102,21 +104,15 @@ class responseObject:
         '''
         rHeader = request.headers
 
-        try:
-            appRateLimitString = rHeader['X-App-Rate-Limit']
-            appRateCountString = rHeader['X-App-Rate-Limit-Count']
-            methodAppRateLimitString = rHeader['X-Method-Rate-Limit']
-            mathodAppRateCountString = rHeader['X-Method-Rate-Limit-Count']
-            self.appRateLimits = self.generateRateLimitDict(appRateLimitString)
-            self.appRateCounts = self.generateRateLimitDict(appRateCountString)
-            self.methodRateLimits = self.generateRateLimitDict(methodAppRateLimitString)
-            self.methodRateCounts = self.generateRateLimitDict(mathodAppRateCountString)
-            self.sleepTime = self.getSleepTime()
-
-        except:
-            print("Exception logged when attempting to create object")
-            self.statusCode = 99999;
-
+        appRateLimitString = rHeader['X-App-Rate-Limit']
+        appRateCountString = rHeader['X-App-Rate-Limit-Count']
+        methodAppRateLimitString = rHeader['X-Method-Rate-Limit']
+        mathodAppRateCountString = rHeader['X-Method-Rate-Limit-Count']
+        self.appRateLimits = self.generateRateLimitDict(appRateLimitString)
+        self.appRateCounts = self.generateRateLimitDict(appRateCountString)
+        self.methodRateLimits = self.generateRateLimitDict(methodAppRateLimitString)
+        self.methodRateCounts = self.generateRateLimitDict(mathodAppRateCountString)
+        self.sleepTime = self.getSleepTime()
         return
 
     def generateRateLimitDict(self, rateLimitString):
