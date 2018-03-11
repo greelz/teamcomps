@@ -6,7 +6,6 @@ import time
 from enum import Enum
 
 current_key_index = 0
-API_KEYS = ["RGAPI-8bd1fde2-ecb4-44d7-b9a5-9515c9a551fa"]
 sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = 420
@@ -25,10 +24,15 @@ class riotAPIStatusCodes(Enum):
     SERVICEUNAVAILABLE = 503
     GATEWAYTIMEOUT = 504
 
-def getMatchesByAccountId(accountID, region = "na1", queue = ""):
+def getMatchesByAccountId(accountID, region, queue, beginTime, endTime):
     url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
-    if queue != "":
+    if queue or beginTime or endTime:
+        url += "?"
+        try:
+            
         url += "?queue=" + str(queue)
+    if beginTime:
+        url += "
     return requestWrapper(url)
 
 def getMatch(matchId, region = "na1"):

@@ -96,9 +96,9 @@ def doThreadWork(matchIds, playersToProcess, region, results, i):
             except (AttributeError, TypeError, KeyError):
                 continue
 
-    if len(new_players) == 0:
+    if len(new_players) == 0 and len(matchIds) > 0:
         try:
-            matchResponse = d.getMatch(matchId, region)
+            matchResponse = d.getMatch(matchIds[0], region)
             addPlayersFromMatch(matchResponse.json, new_players)
         except (AttributeError, TypeError, KeyError):
             pass
@@ -132,4 +132,4 @@ def getAccountMatchList(accountId, region):
             return [match['gameId'] for match in r['matches']]
 
 if __name__ == "__main__":
-    startPulling("FlamesGlory", "na1")
+    startPulling("xKungFuKenny", "na1")
