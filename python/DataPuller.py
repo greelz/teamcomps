@@ -1,38 +1,38 @@
 import requests
 import datetime
 import json
-import pprint
 import time
 from enum import Enum
 
 current_key_index = 0
+API_KEYS = ["RGAPI-1b563ac1-206e-4c71-8202-3ff527dd6894"]
 sleep_until_times = [0 for key in API_KEYS]
 KEY_HEADER = "X-Riot-Token"
-RANKED_SOLO_QUEUE = 420
+RANKED_SOLO_QUEUE = "420"
 
-class riotAPIStatusCodes(Enum):
-    SUCCESS = 200
-    BADREQUEST = 400
-    UNAUTHORIZED = 401
-    FORBIDDEN = 403
-    DATANOTFOUND = 404
-    METHODNOTALLOWED = 405
-    UNSUPPORTEDMEDIATYPE = 415
-    RATELIMITEXCEEDED = 429
-    INTERNALSERVERERROR = 500
-    BADGATEWAY = 502
-    SERVICEUNAVAILABLE = 503
-    GATEWAYTIMEOUT = 504
+_SEASONS = {
+    "PRESEASON3": "0",
+    "SEASON3": "1",
+    "PRESEASON2014": "2",
+    "SEASON2014": "3",
+    "PRESEASON2015": "4",
+    "SEASON2015": "5",
+    "PRESEASON2016": "6",
+    "SEASON2016": "7",
+    "PRESEASON2017": "8",
+    "SEASON2017": "9",
+    "PRESEASON2018": "10",
+    "SEASON2018": "11",
+}
 
-def getMatchesByAccountId(accountID, region, queue, beginTime, endTime):
-    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID)
-    if queue or beginTime or endTime:
-        url += "?"
-        try:
-            
-        url += "?queue=" + str(queue)
-    if beginTime:
-        url += "
+# The only required parameters are accountId and region
+def getMatchesByAccountId(accountID, region, queue = "", beginIndex = "", endIndex = "", season = ""):
+# queue, beginIndex, endIndex, beginTime, endTime, championId
+    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID) + "?"
+    url += "queue=" + queue + "&"
+    url += "beginIndex=" + beginIndex + "&"
+    url += "endIndex=" + endIndex + "&"
+    url += "season=" + season
     return requestWrapper(url)
 
 def getMatch(matchId, region = "na1"):
@@ -53,6 +53,13 @@ def getAccountNameById(playerId, region = "na1"):
     if res is not None:
         return res.json["name"]
     return ""
+
+def getLeague(league, region):
+    url = "https://" + region + ".api.riotgames.com/lol/league/v3/" + league + "leagues/by-queue/RANKED_SOLO_5x5"
+    try:
+        return requestWrapper(url).json
+    except:
+        return None
 
 def requestWrapper(url, headers = {}):
     ''' Algorithm: 

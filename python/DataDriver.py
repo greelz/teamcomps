@@ -81,29 +81,83 @@ def startPulling(seedAccount, region = "na1"):
             else:
                 print("No match list. Moving onto next player.")
 
-def doThreadWork(matchIds, playersToProcess, region, results, i):
-    new_games = 0
-    new_players = []
+def getChallengerAccountNames(region):
+    req = d.getLeague("challenger", region)
+    if req is not None:
+        return [player["playerOrTeamName"] for player in req["entries"]]
+
+def getMasterAccountNames(region):
+    req = d.getLeague("master", region)
+    if req is not None:
+        return [player["playerOrTeamName"] for player in req["entries"]]
+
+def getAllChallengerAndMastersGames(region):
+    playerGlobal = {}
+    challengerNames = getChallengerAccountNames(region)
+    masterNames = getMasterAccountNames(region)
+    allNames = list(set(challengerNames + masterNames))
+    
+    for playerName in allNames:
+        print("Processing account: " + playerName + ".")
+        getAllGamesForAccountBySeason(d.getAccountIdByName(playerName, region), region, "SEASON2018", playerGlobal)
+        print("Done processing accountId " + playerName + ". Writing results to file.")
+        with open("playerGlobal.json", "w") as f:
+            json.dump(playerGlobal, f)
+
+def processGames(matchIds, region):
+    thread_count = 50
+    thread_idx = 0
+    thread_games = [[] for x in range(thread_count)]
+    threads = [None] * thread_count
     for matchId in matchIds:
-        # I think we're safe to set the variable since matchIds are guaranteed
-        # to be unique for a specific player
+        if thread_idx >= thread_count:
+            thread_idx = 0
+        thread_games[thread_idx].append(matchId)
+        thread_idx += 1
+    
+    # Now, spawn the threads and wait for them to do work
+    for i in range(thread_count):
+        threads[i] = threading.Thread(target=getGameResults, args=(thread_games[i], region,))
+        threads[i].start()
+
+    for thread in threads:
+        thread.join()
+
+def getGameResults(matchIds, region):
+    for matchId in matchIds:
+        getGameResult(matchId, region)
+
+def getGameResult(matchId, region):
         if not checkFileExists(str(matchId) + ".json", "../../matchData/"):
             matchResponse = d.getMatch(matchId, region)
             try:
-                new_games += 1
-                addPlayersFromMatch(matchResponse.json, new_players)
                 writeMatchToFile(matchResponse.json)
             except (AttributeError, TypeError, KeyError):
-                continue
+                pass
 
-    if len(new_players) == 0 and len(matchIds) > 0:
-        try:
-            matchResponse = d.getMatch(matchIds[0], region)
-            addPlayersFromMatch(matchResponse.json, new_players)
-        except (AttributeError, TypeError, KeyError):
-            pass
-        
-    results[i] = (new_games, len(matchIds), new_players)
+def getAllGamesForAccountBySeason(accountId, region, seasonName, playerGlobal):
+    beginIndex = 0
+    totalGames = 1
+    while beginIndex < totalGames:
+        r = d.getMatchesByAccountId(accountId, region, d.RANKED_SOLO_QUEUE, str(beginIndex), str(beginIndex + 100), d._SEASONS[seasonName])
+        if r is not None and r.json is not None:
+            r = r.json
+            if 'matches' in r:
+                listOfGames = [match['gameId'] for match in r['matches']]
+
+                if len(listOfGames) == 0:
+                    playerGlobal[accountId] = { "lastIndex": beginIndex }
+                    return
+
+                processGames(listOfGames, region)
+
+            beginIndex = r["endIndex"]
+            totalGames = r["totalGames"]
+        else:
+            playerGlobal[accountId] = { "lastIndex": beginIndex }
+            return
+
+    playerGlobal[accountId] = { "lastIndex": beginIndex }
 
 def addPlayersFromMatch(match, new_players):
     for pId in match['participantIdentities']:
@@ -130,6 +184,30 @@ def getAccountMatchList(accountId, region):
         r = r.json
         if 'matches' in r:
             return [match['gameId'] for match in r['matches']]
+
+def doThreadWork(matchIds, playersToProcess, region, results, i):
+    new_games = 0
+    new_players = []
+    for matchId in matchIds:
+        # I think we're safe to set the variable since matchIds are guaranteed
+        # to be unique for a specific player
+        if not checkFileExists(str(matchId) + ".json", "../../matchData/"):
+            matchResponse = d.getMatch(matchId, region)
+            try:
+                new_games += 1
+                addPlayersFromMatch(matchResponse.json, new_players)
+                writeMatchToFile(matchResponse.json)
+            except (AttributeError, TypeError, KeyError):
+                continue
+
+    if len(new_players) == 0 and len(matchIds) > 0:
+        try:
+            matchResponse = d.getMatch(matchIds[0], region)
+            addPlayersFromMatch(matchResponse.json, new_players)
+        except (AttributeError, TypeError, KeyError):
+            pass
+        
+    results[i] = (new_games, len(matchIds), new_players)
 
 if __name__ == "__main__":
     startPulling("xKungFuKenny", "na1")
