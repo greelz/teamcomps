@@ -14,13 +14,23 @@ def getMatchesProcessed():
                 matches[filename[:-5]] = ""
     return matches
 
+def getPlayerGlobal():
+    with open("playerGlobal.json", "r") as f:
+        try:
+            playerGlobal = json.load(f)
+        except:
+            playerGlobal = {}
+    return playerGlobal
+
 def startPulling(seedAccount, region = "na1"):
+    maxNewPlayersToProcess = 10000
     playersToProcess = []
     playersProcessed = {}
-    count = 0
-    new_games = 0
-    matchesReviewed = 0
+    total_new_games = 0
+    total_matches_reviewed = 0
     thread_count = 50
+    playerGlobal = getPlayerGlobal()
+
     processStats = { "displayEveryNMins": 5, "time": d.unix_time_millis(), "new_games": 0, "matchesReviewed": 0 }
 
     if isinstance(seedAccount, str): 
@@ -29,57 +39,27 @@ def startPulling(seedAccount, region = "na1"):
 
     playersToProcess.append(seedAccount)
     while True:
-        accountId = playersToProcess.pop()
+        accountId = playersToProcess.pop(0)
         if accountId not in playersProcessed:
+            results = getAllGamesForAccountBySeason(accountId, region, "SEASON2018", playerGlobal)
+
+            total_new_games += results[0]
+            total_matches_reviewed += results[1]
+            newPlayers = results[2]
+           
             playersProcessed[accountId] = ""
-            matchList = getAccountMatchList(accountId, region);       
-            # Some players don't have a match list, which seems like a bug
-            # since we found them from a previous players' match history...
-            # But eh, doesn't matter too much. We'll just skip it.
-            if matchList:
-                # Initialize state variables
-                thread_games = [[] for x in range(thread_count)]
-                threads = [None] * thread_count
-                results = [(0, 0, [])] * thread_count
-                thread_idx = 0
-                for matchId in matchList:
-                    # Split the work evenly amongst the threads
-                    # by divvying out matchIds on each thread_games index
-                    count += 1
-                    if thread_idx >= thread_count:
-                        thread_idx = 0
-                    thread_games[thread_idx].append(matchId)
-                    thread_idx += 1
-                
-                # Now, spawn the threads and wait for them to do work
-                for i in range(thread_count):
-                    threads[i] = threading.Thread(target=doThreadWork, args=(thread_games[i], 
-                               playersToProcess, region, results, i))
-                    threads[i].start()
-
-                for thread in threads:
-                    thread.join()
-
-                
-                newGamesFromPlayer = sum([x[0] for x in results])
-                newMatchesReviewed = sum([x[1] for x in results])
-                if len(playersToProcess) < thread_count:
-                    playersToProcess = list(set([item for x in results for item in x[2]]))
-                
-                new_games += newGamesFromPlayer
-                matchesReviewed += newMatchesReviewed
-                currTime = d.unix_time_millis()
-                if currTime > (processStats["time"] + (60000 * processStats["displayEveryNMins"])):
-                    print("------\nTotal new games: " + str(new_games))
-                    print("Matches reviewed:  " + str(matchesReviewed))
-                    print(str(new_games - processStats["new_games"]) + " requests made over the last " + str(round((currTime - processStats["time"]) / 60000, 2)) + " minutes.")
-                    print("Next player to process: [" + str(playersToProcess[-1]) + "]")
-                    processStats["matchesReviewed"] = matchesReviewed
-                    processStats["new_games"] = new_games
-                    processStats["time"] = currTime
-
-            else:
-                print("No match list. Moving onto next player.")
+            if len(playersToProcess) < maxNewPlayersToProcess:
+                playersToProcess += [player for player in newPlayers if player not in playersToProcess and player not in playersProcessed]
+            
+            currTime = d.unix_time_millis()
+            if currTime > (processStats["time"] + (60000 * processStats["displayEveryNMins"])):
+                print("------\nTotal new games: " + str(total_new_games))
+                print("Matches reviewed:  " + str(total_matches_reviewed))
+                print(str(total_new_games - processStats["new_games"]) + " requests made over the last " + str(round((currTime - processStats["time"]) / 60000, 2)) + " minutes.")
+                print("Next player to process: [" + str(playersToProcess[0]) + "]")
+                processStats["matchesReviewed"] = total_matches_reviewed
+                processStats["new_games"] = total_new_games
+                processStats["time"] = currTime
 
 def getChallengerAccountNames(region):
     req = d.getLeague("challenger", region)
@@ -109,6 +89,7 @@ def processGames(matchIds, region):
     thread_idx = 0
     thread_games = [[] for x in range(thread_count)]
     threads = [None] * thread_count
+    results = [[0, 0, []] for x in range(thread_count)]
     for matchId in matchIds:
         if thread_idx >= thread_count:
             thread_idx = 0
@@ -117,27 +98,42 @@ def processGames(matchIds, region):
     
     # Now, spawn the threads and wait for them to do work
     for i in range(thread_count):
-        threads[i] = threading.Thread(target=getGameResults, args=(thread_games[i], region,))
+        threads[i] = threading.Thread(target=getGameResults, args=(thread_games[i], region, results[i],))
         threads[i].start()
 
     for thread in threads:
         thread.join()
 
-def getGameResults(matchIds, region):
-    for matchId in matchIds:
-        getGameResult(matchId, region)
+    return results
 
-def getGameResult(matchId, region):
-        if not checkFileExists(str(matchId) + ".json", "../../matchData/"):
-            matchResponse = d.getMatch(matchId, region)
-            try:
-                writeMatchToFile(matchResponse.json)
-            except (AttributeError, TypeError, KeyError):
-                pass
+def getGameResults(matchIds, region, resultList):
+    for matchId in matchIds:
+        getGameResult(matchId, region, resultList)
+
+    if len(resultList[2]) == 0 and len(matchIds) > 0:
+        try:
+            matchResponse = d.getMatch(matchIds[0], region)
+            resultList[2] += getPlayersFromMatch(matchResponse.json)
+        except (AttributeError, TypeError, KeyError):
+            pass
+
+def getGameResult(matchId, region, resultList):
+    resultList[1] += 1
+    if not checkFileExists(str(matchId) + ".json", "../../matchData/"):
+        matchResponse = d.getMatch(matchId, region)
+        resultList[2] += getPlayersFromMatch(matchResponse.json)
+        resultList[0] += 1
+        try:
+            writeMatchToFile(matchResponse.json)
+        except (AttributeError, TypeError, KeyError):
+            pass
 
 def getAllGamesForAccountBySeason(accountId, region, seasonName, playerGlobal):
     beginIndex = 0
     totalGames = 1
+    total_new_games = 0
+    total_matches_reviewed = 0
+    all_new_players = []
     while beginIndex < totalGames:
         r = d.getMatchesByAccountId(accountId, region, d.RANKED_SOLO_QUEUE, str(beginIndex), str(beginIndex + 100), d._SEASONS[seasonName])
         if r is not None and r.json is not None:
@@ -147,24 +143,37 @@ def getAllGamesForAccountBySeason(accountId, region, seasonName, playerGlobal):
 
                 if len(listOfGames) == 0:
                     playerGlobal[accountId] = { "lastIndex": beginIndex }
-                    return
+                    return [total_new_games, total_matches_reviewed, list(set(all_new_players))]
 
-                processGames(listOfGames, region)
+                results = processGames(listOfGames, region)
+
+                for res in results:
+                    total_new_games += res[0]
+                    total_matches_reviewed += res[1]
+                    all_new_players += res[2]
 
             beginIndex = r["endIndex"]
             totalGames = r["totalGames"]
         else:
             playerGlobal[accountId] = { "lastIndex": beginIndex }
-            return
+            return [total_new_games, total_matches_reviewed, list(set(all_new_players))]
 
     playerGlobal[accountId] = { "lastIndex": beginIndex }
+    return [total_new_games, total_matches_reviewed, list(set(all_new_players))]
 
 def addPlayersFromMatch(match, new_players):
     for pId in match['participantIdentities']:
         player = pId['player']
         accountId = player['accountId']
-        # Do not add players we have already processed or are waiting to process
         new_players.append(accountId)
+
+def getPlayersFromMatch(match):
+    new_players = []
+    for pId in match['participantIdentities']:
+        player = pId['player']
+        accountId = player['accountId']
+        new_players.append(accountId)
+    return new_players
 
 def checkFileExists(filename, directory):
     return os.path.isfile(os.path.join(str(directory), str(filename)))
@@ -210,4 +219,4 @@ def doThreadWork(matchIds, playersToProcess, region, results, i):
     results[i] = (new_games, len(matchIds), new_players)
 
 if __name__ == "__main__":
-    startPulling("xKungFuKenny", "na1")
+    startPulling("imaqtpie", "na1")
