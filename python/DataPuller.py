@@ -23,12 +23,14 @@ _SEASONS = {
     "SEASON2017": "9",
     "PRESEASON2018": "10",
     "SEASON2018": "11",
+    "PRESEASON2019": "12",
+    "SEASON2019": "13"
 }
 
 # The only required parameters are accountId and region
 def getMatchesByAccountId(accountID, region, queue = "", beginIndex = "", endIndex = "", season = ""):
 # queue, beginIndex, endIndex, beginTime, endTime, championId
-    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matchlists/by-account/" + str(accountID) + "?"
+    url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(accountID) + "?"
     url += "queue=" + queue + "&"
     url += "beginIndex=" + beginIndex + "&"
     url += "endIndex=" + endIndex + "&"
@@ -36,11 +38,11 @@ def getMatchesByAccountId(accountID, region, queue = "", beginIndex = "", endInd
     return requestWrapper(url)
 
 def getMatch(matchId, region = "na1"):
-    url = "https://" + region + ".api.riotgames.com/lol/match/v3/matches/" + str(matchId)
+    url = "https://" + region + ".api.riotgames.com/lol/match/v4/matches/" + str(matchId)
     return requestWrapper(url)
 
 def getAccountIdByName(name, region = "na1"):
-    url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-name/" + str(name)
+    url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + str(name)
     res = requestWrapper(url)
     try:
         return res.json["accountId"]
@@ -48,14 +50,14 @@ def getAccountIdByName(name, region = "na1"):
         return None
 
 def getAccountNameById(playerId, region = "na1"):
-    url = "https://" + region + ".api.riotgames.com/lol/summoner/v3/summoners/by-account/" + str(playerId)
+    url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-account/" + str(playerId)
     res = requestWrapper(url)
     if res is not None:
         return res.json["name"]
     return ""
 
 def getLeague(league, region):
-    url = "https://" + region + ".api.riotgames.com/lol/league/v3/" + league + "leagues/by-queue/RANKED_SOLO_5x5"
+    url = "https://" + region + ".api.riotgames.com/lol/league/v4/" + league + "leagues/by-queue/RANKED_SOLO_5x5"
     try:
         return requestWrapper(url).json
     except:

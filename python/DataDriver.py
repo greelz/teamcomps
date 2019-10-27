@@ -41,7 +41,7 @@ def startPulling(seedAccount, region = "na1"):
     while True:
         accountId = playersToProcess.pop(0)
         if accountId not in playersProcessed:
-            results = getAllGamesForAccountBySeason(accountId, region, "SEASON2018", playerGlobal)
+            results = getAllGamesForAccountBySeason(accountId, region, "SEASON2019", playerGlobal)
 
             total_new_games += results[0]
             total_matches_reviewed += results[1]
@@ -219,4 +219,4 @@ def doThreadWork(matchIds, playersToProcess, region, results, i):
     results[i] = (new_games, len(matchIds), new_players)
 
 if __name__ == "__main__":
-    startPulling("imaqtpie", "na1")
+    startPulling("greelz", "na1")
