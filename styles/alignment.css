@@ -108,6 +108,15 @@ input[type=button] {
     float: right;
 }
 
+#champs {
+	width: 400px;
+}
+
+#champs div {
+	display: inline-block;
+	margin: 5px;
+}
+
 #recommendations {
     margin-bottom: 3px;
 }
