@@ -18,7 +18,7 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
         print("No games found for this summoner.")
         return
 
-    num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add)
+    num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add, region)
     begin_index += 100
 
     while begin_index < total_games:
@@ -33,11 +33,11 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
             total_games = match_json['totalGames']
 
         # Save the unique game_ids
-        num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add)
+        num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add, region)
 
     print(str(num_unique_games_for_summoner) + "/" + str(total_games) + " unique games for " + summoner_name)
 
-def save_match_ids(match_json, games_dictionary, player_dic, players_to_add):
+def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, region):
     games_to_download = []
     if match_json and 'matches' in match_json:
         for game in match_json['matches']:
@@ -54,7 +54,7 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add):
     need_more_players = len(player_dic) < 1000
     for i in range(len(games_to_download)):
         games_dictionary[game_id] = 1
-        new_thread = threading.Thread(target=thread_function, args=(games_to_download[i], "euw1", players_arr, need_more_players, i))
+        new_thread = threading.Thread(target=thread_function, args=(games_to_download[i], region, players_arr, need_more_players, i))
         threads.append(new_thread)
         new_thread.start()
 
@@ -72,7 +72,7 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add):
 
 def thread_function(game_id, region, player_arr, need_more_players, index):
     game_json = d.getMatch(game_id, region)
-    write_game_to_file(game_json, game_id)
+    write_game_to_file(game_json, game_id, region)
     if need_more_players:
         save_player_ids(game_json, player_arr, index)
 
@@ -85,15 +85,15 @@ def save_player_ids(match_json, player_arr, index):
                 summoner_name = player_obj['summonerName']
                 player_arr[index].append(summoner_name)
 
-def write_game_to_file(match_json, game_id):
+def write_game_to_file(match_json, game_id, region):
     filename = game_id + '.json'
-    directory = "../../matchData/euw1"
+    directory = "../../matchData/" + region
     abspath = os.path.join(directory, filename)
     with open(abspath, 'w') as f:
         json.dump(match_json, f)
 
-def build_game_ids():
-    directory = "../../matchData/euw1"
+def build_game_ids(region):
+    directory = "../../matchData/" + region
     game_ids = {}
     for root, dirs, files in os.walk(directory):
         for game_id in files:
@@ -102,15 +102,16 @@ def build_game_ids():
     return game_ids
 
 if __name__ == "__main__":
-    game_ids = build_game_ids()
+    region = "euw1"
+    game_ids = build_game_ids(region)
     # No games, we'll add up to 1000 people in a queue
-    first_player = "Ambull"
+    first_player = "new game lmao"
     players_list = { first_player: 1 }
     unique_players_to_add = 1000
 
     # From the seed account, add <n> more summoners, then loop indefinitely
     print("Downloading games from " + first_player + " on euw1.")
-    getAllMatchesForSummoner(first_player, d._SEASONS['SEASON2019'], 'euw1', game_ids, unique_players_to_add, players_list)
+    getAllMatchesForSummoner(first_player, d._SEASONS['SEASON2019'], region, game_ids, unique_players_to_add, players_list)
 
     while True:
         # Find the next summoner to download games from
@@ -128,4 +129,4 @@ if __name__ == "__main__":
         print("Downloading games for " + summoner)
         # Now we have a new summoner, find their games and keep going
         players_list[summoner] = 1
-        getAllMatchesForSummoner(summoner, d._SEASONS['SEASON2019'], 'euw1', game_ids, unique_players_to_add, players_list)
+        getAllMatchesForSummoner(summoner, d._SEASONS['SEASON2019'], region, game_ids, unique_players_to_add, players_list)
