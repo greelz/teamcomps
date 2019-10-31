@@ -28,18 +28,24 @@ _SEASONS = {
 }
 
 # The only required parameters are accountId and region
-def getMatchesByAccountId(accountID, region, queue = "", beginIndex = "", endIndex = "", season = ""):
+def getMatchesByAccountId(accountID, region, season, queue = "", beginIndex = "", endIndex = ""):
 # queue, beginIndex, endIndex, beginTime, endTime, championId
     url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(accountID) + "?"
     url += "queue=" + queue + "&"
-    url += "beginIndex=" + beginIndex + "&"
-    url += "endIndex=" + endIndex + "&"
+    url += "beginIndex=" + str(beginIndex) + "&"
+    url += "endIndex=" + str(endIndex) + "&"
     url += "season=" + season
-    return requestWrapper(url)
+    req = requestWrapper(url)
+    if req:
+        return req.json
+    return None
 
 def getMatch(matchId, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/match/v4/matches/" + str(matchId)
-    return requestWrapper(url)
+    req = requestWrapper(url)
+    if req:
+        return req.json
+    return None
 
 def getAccountIdByName(name, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + str(name)
@@ -57,6 +63,8 @@ def getAccountNameById(playerId, region = "na1"):
     return ""
 
 def getLeague(league, region):
+    if league != "challenger" and league != "grandmaster":
+        return None
     url = "https://" + region + ".api.riotgames.com/lol/league/v4/" + league + "leagues/by-queue/RANKED_SOLO_5x5"
     try:
         return requestWrapper(url).json
@@ -83,7 +91,7 @@ def requestWrapper(url, headers = {}):
         if r.sleepTime > 0:
             print("Hit our limit on api_key #" + str(current_key_index))
             current_time = unix_time_millis(datetime.datetime.now())
-            sleep_until_times[current_key_index] = current_time + (r.sleepTime * 1000.0)
+            sleep_until_times[current_key_index] = current_time + (r.sleepTime)
             current_key_index += 1
             if current_key_index >= len(API_KEYS):
                 current_key_index = 0
@@ -117,46 +125,9 @@ class responseObject:
         '''
         rHeader = request.headers
 
-        appRateLimitString = rHeader['X-App-Rate-Limit']
-        appRateCountString = rHeader['X-App-Rate-Limit-Count']
-        methodAppRateLimitString = rHeader['X-Method-Rate-Limit']
-        mathodAppRateCountString = rHeader['X-Method-Rate-Limit-Count']
-        self.appRateLimits = self.generateRateLimitDict(appRateLimitString)
-        self.appRateCounts = self.generateRateLimitDict(appRateCountString)
-        self.methodRateLimits = self.generateRateLimitDict(methodAppRateLimitString)
-        self.methodRateCounts = self.generateRateLimitDict(mathodAppRateCountString)
-        self.sleepTime = self.getSleepTime()
-        return
-
-    def generateRateLimitDict(self, rateLimitString):
-        rls = rateLimitString
-        rlsArray = rls.split(',')
-        rlDict = {}
-
-        for rlTuple in rlsArray:
-            rlTupleSplit = rlTuple.split(':')
-            rlDict[rlTupleSplit[1]] = rlTupleSplit[0]
-        return rlDict
-
-    def getSleepTime(self):
-        appSleepTime = 0
-        methodSleepTime = 0
-        
-        #check app limits
-        for bucket in self.appRateLimits:
-            if (self.appRateLimits[bucket] == self.appRateCounts[bucket]):
-                appSleepTime = bucket
-                break
-        #check method limits
-        for bucket in self.methodRateLimits:
-            if self.methodRateCounts[bucket] == self.methodRateLimits[bucket]:
-                methodSleepTime = bucket
-                return int(bucket)
-
-        if int(methodSleepTime) > int(appSleepTime):
-            return int(methodSleepTime)
-
+        if self.statusCode == 429:
+            self.sleepTime = int(rHeader['Retry-After'])
         else:
-            return int(appSleepTime)
-
+            self.sleepTime = 0
+        return
 
