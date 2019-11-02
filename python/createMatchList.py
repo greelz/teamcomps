@@ -95,6 +95,8 @@ def write_game_to_file(match_json, game_id, region):
 def build_game_ids(region):
     directory = "../../matchData/" + region
     game_ids = {}
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     for root, dirs, files in os.walk(directory):
         for game_id in files:
             game_ids[game_id[:-5]] = 1
@@ -102,15 +104,21 @@ def build_game_ids(region):
     return game_ids
 
 if __name__ == "__main__":
-    region = "euw1"
+    args = sys.argv
+    if len(args) == 3:
+        first_player = args[1]
+        region = args[2]
+    else:
+        region = "euw1"
+        first_player = "Tam"
+
+    print("Building a dictionary of existing games...")
     game_ids = build_game_ids(region)
-    # No games, we'll add up to 1000 people in a queue
-    first_player = "new game lmao"
     players_list = { first_player: 1 }
     unique_players_to_add = 1000
 
     # From the seed account, add <n> more summoners, then loop indefinitely
-    print("Downloading games from " + first_player + " on euw1.")
+    print("Downloading games from " + first_player + " on " + region)
     getAllMatchesForSummoner(first_player, d._SEASONS['SEASON2019'], region, game_ids, unique_players_to_add, players_list)
 
     while True:

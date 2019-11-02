@@ -126,7 +126,9 @@ class responseObject:
         rHeader = request.headers
 
         if self.statusCode == 429:
-            self.sleepTime = int(rHeader['Retry-After'])
+            # Right now, let's just sleep for 2 mins...
+            # The retry-after seems buggy...
+            self.sleepTime = 120
         else:
             self.sleepTime = 0
         return
