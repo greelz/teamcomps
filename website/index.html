@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-114492155-1"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'UA-114492155-1');
-        </script>
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 
         <title>League Team Compositions</title>
         <link rel="stylesheet" id="themeStylesheet" type="text/css" href="styles/lightTheme.css" />
@@ -31,40 +24,26 @@
                     Search for a team composition.
                 </div>
                 
-                <div class="left">
-                    <div id="championList">
-                        <div>
-                            <input type="text" class="champion_input" placeholder="Champion" />
-                        </div>
-                        <div>
-                            <input type="text" class="champion_input" placeholder="Champion" />
-                        </div>
-                        <div>
-                            <input type="text" class="champion_input" placeholder="Champion" />
-                        </div>
-                        <div>
-                            <input type="text" class="champion_input" placeholder="Champion" />
-                        </div>
-                        <div>
-                            <input type="text" class="champion_input" placeholder="Champion" />
-                        </div>
-                    </div>
-                    <div id="actionButtons">                        
-                        <input type="button" id="winPercentBtn" value="Get Winning Percentage" />
-                        <input type="button" id="nextBestChampBtn" value="Get Next Best Champ" />
-                    </div>
-                    <div id="recommendations"></div>
-                </div>
-				<div class="right">
-					<div id="champs"></div>
+				<div class="search">
+					<div id="championList">
+						<div>
+							<input type="text" class="champion_input" placeholder="Champion" />
+						</div>
+					</div>
+					<div id="actionButtons">                        
+						<input type="button" id="winPercentBtn" value="Get Winning Percentage" />
+						<input type="button" id="nextBestChampBtn" value="Get Next Best Champ" />
+					</div>
+					<div id="recommendations"></div>
 				</div>
+				<div id="champs"></div>
 
                 
             </div>
         </div>
+        <script src="js/generic.js"></script>
         <script src="js/champions.js"></script>
         <script src="js/cookie.js"></script>
-        <script src="js/generic.js"></script>
         <script src="js/autocomplete.js"></script>
         <script src="js/teamcomp.js"></script>
     </body>

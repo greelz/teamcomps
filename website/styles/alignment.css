@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+	font-family: Roboto;
 }
 
 html, body, .container {
@@ -84,13 +85,20 @@ input[type=button] {
     text-align: center;
 }
 
+#championList > div {
+	margin-bottom: 5px;
+}
+
+#championList img {
+	height: 31px;
+}
+
 .center img {
     height: 31px;
 }
 
 .champion_input {
     width: 100%;
-    margin-top: 4px;
     font-size: 20px;
     text-align: center;
 }
@@ -110,11 +118,19 @@ input[type=button] {
 
 #champs {
 	width: 400px;
+	font-size: 10px;
+}
+
+#champs img {
+	height: 50px;
+	width: 50px;
 }
 
 #champs div {
 	display: inline-block;
-	margin: 5px;
+	width: 80px;
+	text-align: center;
+	height: 60px;
 }
 
 #recommendations {

@@ -22,19 +22,6 @@ function tryFocusOnBlankInput() {
     return false;
 }
 
-function getChampionKey(val) {
-    if (championDictionary.name[val]) {
-        return championDictionary.name[val].key;
-    }
-    if (championDictionary.id[val]) {
-        return championDictionary.id[val].key;
-    }
-    if (championDictionary.key[val]) {
-        return val;
-    }
-    return null;
-}
-
 function getChampionName(val) {
     if (championDictionary.name[val]) {
         return val;
@@ -51,12 +38,11 @@ function getChampionName(val) {
 function getChampionImgSrc(champion) {
     // Since we'll have the champion display name, reformat it to
     // grab the champion key
-    var champKey = getChampionKey(champion);
-    if (champKey) {
-        return "images/champions/" + champKey + "48.png";
-    }
-    console.log("Couldn't find an image for: " + champion + ".");
-    return null;
+	champion = championDictionary.dataKeyFromHumanName[champion];
+	if (champion) {
+		return "images/champions/" + champion + ".png";
+	}
+	return "";
 }
 
 function search(url, callback) {
@@ -205,8 +191,12 @@ function changeTheme(mode, elem) {
 // ---------- Operations after loading the page ----------
 (function () {
     var inputs = $$(".champion_input"), idx;
+	var champ_names = []
+	for (var elem in championDictionary.data) {
+		champ_names.push(championDictionary.data[elem].name)
+	}
     for (idx = 0; idx < inputs.length; idx += 1) {
-        autocomplete(inputs[idx], Object.keys(championDictionary.name), tryFocusOnBlankInput, getChampionImgSrc);
+        autocomplete(inputs[idx], champ_names, tryFocusOnBlankInput, getChampionImgSrc);
     }
 }());
 
@@ -233,3 +223,20 @@ bindEvent($("#nextBestChampBtn"), "click", function () {
 callAjax("http://teamcomp.org:8000/totalGames", function (response) {
     $("#totalGames").innerText = response + " games.";    
 });
+
+function generateChampBox(name) {
+	var t = document.createElement(table);
+	var d = document.createElement("div");
+	var i = document.createElement("img");
+	var p = document.createElement("p");
+	d.className = "champ";
+	i.src = "images/champions/" + name + ".png";
+	p.innerHTML = championDictionary.data[name].name;
+	d.appendChild(i);
+	d.appendChild(p);
+	return d;
+}
+
+for (var i in championDictionary.data) {
+	document.getElementById('champs').appendChild(generateChampBox(i));
+}

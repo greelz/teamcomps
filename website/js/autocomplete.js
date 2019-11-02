@@ -20,17 +20,16 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
     function createItemImage(item_name) {
         var img = document.createElement("img");
         img.src = styleCallback(item_name);
-        addClass(img, "left");
+		addClass(img, "left");
         return img;
     }
 
     function saveAutocompleteToInput(elem, item_name) {
         elem.value = item_name;
         if (styleCallback) {
-            addClass(elem, "slimFromPic");
-            var img = createItemImage(item_name, 31);
-            img.style = "margin-top: 4px";
+            var img = createItemImage(item_name);
             elem.parentNode.insertBefore(img, elem);
+			addClass(elem, "slimFromPic");
         }
         if (searchCallback) {
             searchCallback(item_name);

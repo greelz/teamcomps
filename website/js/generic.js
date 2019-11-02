@@ -44,6 +44,7 @@ function doOnDelay(callback, delay) {
 }
 
 function callAjax(url, callback, interval) {
+	console.log("opening " + url);
     if (window.XMLHttpRequest) {
         var oReq = new XMLHttpRequest();
         if (oReq.withCredentials === true) {
