@@ -13,13 +13,34 @@ function getBlankInputElement() {
     return null;
 }
 
-function tryFocusOnBlankInput() {
-    var elem = getBlankInputElement();
+// Prioritize focusing on a blank input box
+// If not, then add a new box if there's fewer than 5
+// Otherwise, do nothing.
+function addNewChampionBox() {
+	var champion_elements, elem = getBlankInputElement(), new_input;
     if (elem) {
         elem.focus();
-        return true;
     }
-    return false;
+	else {
+		champion_elements = $$(".champion_input");
+		if (champion_elements.length < 5) {
+			new_input = createChampionBox();
+			document.getElementById("championList").appendChild(new_input);
+			new_input.focus();
+		}
+	}
+}
+
+function createChampionBox() {
+	var div = dce("div"), elem = dce("input"), champ_names = [], champ;
+	for (champ in championDictionary.data) {
+		champ_names.push(championDictionary.data[champ].name)
+	}
+	addClass(elem, "champion_input");
+	elem.placeholder = "Champion";
+	autocomplete(elem, champ_names, addNewChampionBox, getChampionImgSrc);
+	div.appendChild(elem);
+	return div;
 }
 
 function getChampionName(val) {
@@ -43,6 +64,35 @@ function getChampionImgSrc(champion) {
 		return "images/champions/" + champion + ".png";
 	}
 	return "";
+}
+
+function createChampionCard(name) {
+	var d = dce("div");
+	var i = dce("img");
+	var p = dce("p");
+	var pretty_name = championDictionary.data[name].name; 
+	d.className = "champ";
+	i.src = "images/champions/" + name + ".png";
+	p.innerHTML = pretty_name;
+	d.appendChild(i);
+	d.appendChild(p);
+	bindEvent(d, "click", function () {
+		addChampToSearch(pretty_name);
+	});
+	return d;
+}
+
+function addChampToSearch(champ_name) {
+	var elemToChange = getBlankInputElement();
+	var all_elements;
+	if (!elemToChange) {
+		// We'll just grab the last one to modify, maybe there's an invalid field or something
+		all_elements = $$(".champion_input");
+		elemToChange = all_elements[all_elements.length - 1];
+	}
+
+	elemToChange.value = champ_name;
+	elemToChange.dispatchEvent(new Event("set_text"));
 }
 
 function search(url, callback) {
@@ -86,16 +136,16 @@ function drawPhrasesAndSearch(url, callback) {
 
 function createChampionTable(champIds) {
     var i = 0, table, row, cell, img;
-    table = document.createElement("table");
+    table = dce("table");
     addClass(table, "tableCenter");
-    row = document.createElement("tr");
+    row = dce("tr");
     table.appendChild(row);
     for (i; i < champIds.length; i += 1) {
-        cell = document.createElement("td");
+        cell = dce("td");
         row.appendChild(cell);
 
         // Champion Image
-        img = document.createElement("img");
+        img = dce("img");
         img.src = getChampionImgSrc(champIds[i]);
         cell.appendChild(img);
 
@@ -116,19 +166,19 @@ function bestChampCallback(response) {
         table = createChampionTable([best_champ].concat(champIds));
         fragment.appendChild(table);
 
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = "Next best champion: " + getChampionName(best_champ);
         fragment.appendChild(p);
 
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = "Win Percentage: " + (winPercent * 100).toFixed(1) + "%";
         fragment.appendChild(p);
 
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = total_games + " games played together.";
         fragment.appendChild(p);
     } else {
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = "Sadly, we don't have enough data for these champions.";
         fragment.appendChild(p);
     }
@@ -147,15 +197,15 @@ function winPercentCallback(response) {
     if (total_games > 0) {
         table = createChampionTable(champIds);
         fragment.appendChild(table);
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = "Win Percentage: " + (winPercent * 100).toFixed(1) + "%";
         fragment.appendChild(p);
 
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = total_games + " games analyzed.";
         fragment.appendChild(p);
     } else {
-        p = document.createElement("p");
+        p = dce("p");
         p.innerText = "Sadly, we don't have enough data for these champions.";
         fragment.appendChild(p);
     }
@@ -189,16 +239,10 @@ function changeTheme(mode, elem) {
 }
 
 // ---------- Operations after loading the page ----------
-(function () {
-    var inputs = $$(".champion_input"), idx;
-	var champ_names = []
-	for (var elem in championDictionary.data) {
-		champ_names.push(championDictionary.data[elem].name)
-	}
-    for (idx = 0; idx < inputs.length; idx += 1) {
-        autocomplete(inputs[idx], champ_names, tryFocusOnBlankInput, getChampionImgSrc);
-    }
-}());
+addNewChampionBox();
+for (var i in championDictionary.data) {
+	document.getElementById('champs').appendChild(createChampionCard(i));
+}
 
 if (getCookie("theme") === "night") {
     changeTheme("night");
@@ -212,6 +256,7 @@ bindEvent($("#themeButton"), "click", function (event) {
     }
 });
 
+/*
 bindEvent($("#winPercentBtn"), "click", function () {
     search("http://teamcomp.org:8000/winPercentage?", winPercentCallback);
 });
@@ -223,20 +268,6 @@ bindEvent($("#nextBestChampBtn"), "click", function () {
 callAjax("http://teamcomp.org:8000/totalGames", function (response) {
     $("#totalGames").innerText = response + " games.";    
 });
+*/
 
-function generateChampBox(name) {
-	var t = document.createElement(table);
-	var d = document.createElement("div");
-	var i = document.createElement("img");
-	var p = document.createElement("p");
-	d.className = "champ";
-	i.src = "images/champions/" + name + ".png";
-	p.innerHTML = championDictionary.data[name].name;
-	d.appendChild(i);
-	d.appendChild(p);
-	return d;
-}
 
-for (var i in championDictionary.data) {
-	document.getElementById('champs').appendChild(generateChampBox(i));
-}

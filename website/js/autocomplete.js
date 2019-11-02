@@ -177,7 +177,17 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
         removeElement($(".autocomplete"));
     });
 
+	bindEvent(document, "input", function() {
+		console.log("here");
+	});
+
+	bindEvent(elem, "set_text", function() {
+		removeElement(elem.previousSibling);
+		saveAutocompleteToInput(elem, elem.value);
+	});
+
     bindEvent(elem, "keydown", function (event) {
+		console.log("here");
         if (event.keyCode === 13) { // enter key
             event.preventDefault();
         } else if (event.keyCode === 40) { // down arrow

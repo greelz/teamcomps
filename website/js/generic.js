@@ -9,6 +9,10 @@ var $$ = function (selector) {
     return document.querySelectorAll(selector);
 };
 
+var dce = function(elem) {
+	return document.createElement(elem);
+}
+
 function hasClass(elem, className) {
     if (elem) {
         return elem.className.split(' ').indexOf(className) > -1;
@@ -44,7 +48,6 @@ function doOnDelay(callback, delay) {
 }
 
 function callAjax(url, callback, interval) {
-	console.log("opening " + url);
     if (window.XMLHttpRequest) {
         var oReq = new XMLHttpRequest();
         if (oReq.withCredentials === true) {

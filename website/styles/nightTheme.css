@@ -34,14 +34,6 @@ input, textarea {
     color: #b2b2b2;
 }
 
-input:focus, textarea:focus {
-    border-color: #000;
-}
-
-input[type=button]:hover {
-    background-color: #191919;
-}
-
 .autocomplete {
     box-shadow: 0px 5px 15px grey;
     background-color: #323232;
@@ -66,4 +58,10 @@ input[type=button]:hover {
 
 .themed {
     color: white;
+}
+
+.section {
+	background-color: #191919;
+	border: 1px solid gray;
+	color: white;
 }
