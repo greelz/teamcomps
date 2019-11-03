@@ -16,7 +16,7 @@ function getBlankInputElement() {
 // Prioritize focusing on a blank input box
 // If not, then add a new box if there's fewer than 5
 // Otherwise, do nothing.
-function addNewChampionBox() {
+function tryAddNewChampionInputElem() {
 	var champion_elements, elem = getBlankInputElement(), new_input;
     if (elem) {
         elem.focus();
@@ -24,23 +24,86 @@ function addNewChampionBox() {
 	else {
 		champion_elements = $$(".champion_input");
 		if (champion_elements.length < 5) {
-			new_input = createChampionBox();
+			new_input = createChampionInputElem();
 			document.getElementById("championList").appendChild(new_input);
 			new_input.focus();
 		}
 	}
 }
 
-function createChampionBox() {
+function createChampionInputElem() {
 	var div = dce("div"), elem = dce("input"), champ_names = [], champ;
 	for (champ in championDictionary.data) {
 		champ_names.push(championDictionary.data[champ].name)
 	}
 	addClass(elem, "champion_input");
 	elem.placeholder = "Champion";
-	autocomplete(elem, champ_names, addNewChampionBox, getChampionImgSrc);
+	autocomplete(elem, champ_names, tryAddNewChampionInputElem, getChampionImgSrc);
 	div.appendChild(elem);
 	return div;
+}
+
+function createChampionSection() {
+    // First, create the 'filters' and their actions
+    var roles = ['top', 'jg', 'mid', 'bot', 'supp']
+    var positionsDiv = dce("div");
+    positionsDiv.id = "positionsDiv";
+    for (var idx in roles) {
+        var role = roles[idx];
+        var btn = createFilterButton(role);
+        positionsDiv.appendChild(btn);
+    }
+    $("#champs").appendChild(positionsDiv);
+
+    for (var i in championDictionary.data) {
+        $('#champs').appendChild(createChampionCard(i));
+    }
+}
+
+function createFilterButton(role) {
+    var img = dce('img');
+    img.src = "./images/positions/" + role + ".png";
+    bindEvent(img, "click", function() {
+        var str = "data-selected";
+        var reset = false;
+        if (img.getAttribute(str)) {
+            reset = true;
+            img.setAttribute(str, undefined);
+            removeClass(img, "selected");
+        }
+        else {
+            img.setAttribute(str, "1");
+            addClass(img, "selected")
+        }
+        var champions = $$(".champ");
+        for (let champion of champions) {
+            var dataName = champion.getAttribute("data-name");
+            if (!reset && (championDictionary.data[dataName].roles.indexOf(role) === -1)) {
+                addClass(champion, "nodisp");
+            }
+            else {
+                removeClass(champion, "nodisp");
+            }
+        }
+    });
+    return img;
+}
+
+function createChampionCard(name) {
+	var d = dce("div");
+	var i = dce("img");
+	var p = dce("p");
+	var pretty_name = championDictionary.data[name].name; 
+	d.className = "champ";
+    d.setAttribute('data-name', name);
+	i.src = "images/champions/" + name + ".png";
+	p.innerHTML = pretty_name;
+	d.appendChild(i);
+	d.appendChild(p);
+	bindEvent(d, "click", function () {
+		addChampToSearch(pretty_name);
+	});
+	return d;
 }
 
 function getChampionName(val) {
@@ -66,21 +129,6 @@ function getChampionImgSrc(champion) {
 	return "";
 }
 
-function createChampionCard(name) {
-	var d = dce("div");
-	var i = dce("img");
-	var p = dce("p");
-	var pretty_name = championDictionary.data[name].name; 
-	d.className = "champ";
-	i.src = "images/champions/" + name + ".png";
-	p.innerHTML = pretty_name;
-	d.appendChild(i);
-	d.appendChild(p);
-	bindEvent(d, "click", function () {
-		addChampToSearch(pretty_name);
-	});
-	return d;
-}
 
 function addChampToSearch(champ_name) {
 	var elemToChange = getBlankInputElement();
@@ -239,10 +287,8 @@ function changeTheme(mode, elem) {
 }
 
 // ---------- Operations after loading the page ----------
-addNewChampionBox();
-for (var i in championDictionary.data) {
-	document.getElementById('champs').appendChild(createChampionCard(i));
-}
+tryAddNewChampionInputElem();
+createChampionSection();
 
 if (getCookie("theme") === "night") {
     changeTheme("night");

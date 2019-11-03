@@ -1,4 +1,5 @@
 import json
+from role_generator import getChampionRoles as gc
 
 # Generate a nicer .json file that allows quick lookups in JS
 # We'll create a dictionary like this:
@@ -9,6 +10,8 @@ champions = {}
 with open("champions.json") as f:
     champions = json.load(f)
 
+
+champ_roles = gc()
 champions = champions['data']
 js_dic = { 'dataKeyFromRiotKey': {}, 'dataKeyFromPrimeKey': {}, 'dataKeyFromHumanName': {}, 'data': {} }
 for champion in champions:
@@ -20,7 +23,8 @@ for champion in champions:
     js_dic['data'][champion] = { 
         'name': champ_data['name'],
         'key': champ_data['key'],
-        'primeKey': champ_data['primeKey']
+        'primeKey': champ_data['primeKey'],
+        'roles': champ_roles[champ_data['name']]
     }
     js_dic['dataKeyFromRiotKey'][champ_data['key']] = champion
     js_dic['dataKeyFromPrimeKey'][champ_data['primeKey']] = champion

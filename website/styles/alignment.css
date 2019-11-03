@@ -6,9 +6,10 @@
 
 .main {
     padding: 0 10px 0 10px;
-    max-width: 990px;
+    max-width: 1100px;
     min-width: 500px;
     margin: 10px auto 0 auto;
+	text-align: center;
 }
 
 .header {
@@ -96,23 +97,28 @@ hr {
 }
 
 #champs {
-	width: 400px;
+	width: 450px;
 	display: inline-block;
 }
 
-#champs img {
-	height: 50px;
-	width: 50px;
-	display: block;
-	margin: 0 auto;
+.champ:hover {
+	cursor: pointer;
+	background-color: #efefef;
 }
 
-#champs div {
+.champ {
 	display: inline-block;
 	width: 80px;
 	text-align: center;
 	margin: 5px;
 	font-size: 10px;
+}
+
+.champ img {
+	height: 50px;
+	width: 50px;
+	display: block;
+	margin: 0 auto;
 }
 
 .section {
@@ -129,4 +135,24 @@ hr {
 	text-align: left;
 	font-weight: bold;
 	margin-bottom: 30px;
+}
+
+#positionsDiv > img:hover {
+    cursor: pointer;
+    background-color: #efefef;
+}
+
+#positionsDiv > img {
+    padding: 10px;
+    display: inline-block;
+    height: 30px;
+    width: 30px;
+}
+
+#positionsDiv .selected {
+    background-color: #efefef;
+}
+
+.nodisp {
+    display: none !important;
 }
