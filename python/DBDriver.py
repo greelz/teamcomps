@@ -1,73 +1,124 @@
 import os
+import sys
+from pathlib import Path
 import json
 import generatePrimes as gp
-from pymongo import MongoClient
-import datetime
+import mysql.connector as msc
+from datetime import datetime
+from datetime import timezone
+import traceback
 
 
 "This module is meant to handle getting the pulled data from the files"
 
-epoch = datetime.datetime.utcfromtimestamp(0)
 prime_nums = gp.getPrimes(1000)
-client = MongoClient().league
 
 def loopOverFiles(directory):
-    count = 0
+    writeable_events = []
+    num_processed = 0
+    num_added = 0
+    temp_events = []
+    my_SQL_conn = msc.Connect(user = 'root', password='banana', host='127.0.0.1', database='teamcomps_db', port=3306)
+    cursor = my_SQL_conn.cursor()
+
     for root, dirs, filenames in os.walk(directory):
         for filename in filenames:
             #get winners and losers
+            num_processed += 1
             fullFile = os.path.join(directory, filename)
-            if (count % 10000 == 0):
-                print("Processed " + str(count) + " games.")
+            
             with open(fullFile, "r") as f:
                 try:
-                    count += 1
                     matchDict = json.load(f)
-                    process_match(matchDict)
-                except:
-                    print(fullFile)
-                    continue
+                    temp_events = process_match(matchDict) # seperate this line and the next so that we can keep count of "valid" matches
+                    num_processed += 1
+                    if (not temp_events):
+                        continue # don't fail for malformed games
+                    writeable_events.extend(temp_events)
 
+                    if(len(writeable_events) >= 1000):
+                        # write events to database, and clear the array
+                        writeable_events.clear()
+                        cursor.executemany(insert_matches_command(), writeable_events)
+                        
+                        
+                except Exception as error:
+                    print(fullFile)
+                    traceback.print_exc()
+                     
+
+    if (writeable_events):
+        cursor.executemany(insert_matches_command(), writeable_events)
+    my_SQL_conn.commit()
+    my_SQL_conn.close()
+    print("Number matches processed: " + str(num_processed))
 
 def process_match(match_data):
     team_dict = getWinnersAndLosers(match_data)
+    if (not team_dict):
+        return
     losers = {}
     winners = {}
+    eventsToReturn = []
     if "losers" and "winners" in team_dict:
-        time = (datetime.datetime.now() - epoch).total_seconds() * 1000.0
+        time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         loserTeamKey = champArrayToKey(team_dict["losers"])
         winnerTeamKey = champArrayToKey(team_dict["winners"])
-        losers["comp_key"] = loserTeamKey
-        losers["game"] = match_data['gameId']
-        losers["win"] = False
-        losers["team_comp"] = team_dict["losers"]
-        losers["time_of_entry"] = time
-        losers["patch"] = match_data['gameVersion']
-
-        winners["comp_key"] = winnerTeamKey
-        winners["game"] = match_data['gameId']
-        winners["win"] = True
-        winners["team_comp"] = team_dict["winners"]
-        winners["time_of_entry"] = time
-        winners["patch"] = match_data['gameVersion']
-        client.games.insert_many([winners, losers])
-
-    return
-
-def updateStatsDict(statsDict,champArr,team_key,isLoss):
-    if isLoss:
-        countKey = "lossCount"
-    else:
-        countKey = "winCount"
-
-    if not team_key in statsDict:
-        statsDict[team_key] = {}
-        statsDict[team_key]["champs"] = champArr
-
-    if not countKey in statsDict[team_key]:
-        statsDict[team_key][countKey] = 0
-    statsDict[team_key][countKey] += 1
         
+        eventsToReturn.append( 
+            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], match_data['gameVersion'], time) 
+            )
+        eventsToReturn.append(
+            build_team_event_row(winnerTeamKey, team_dict['winners'], True, match_data['gameId'], match_data['gameVersion'], time)
+        )
+    return eventsToReturn
+
+
+def insert_matches_command():
+    return """INSERT INTO winlosseventfact 
+            ( 
+                        TeamComboKey, 
+                        ChampOne, 
+                        ChampTwo, 
+                        ChampThree, 
+                        ChampFour, 
+                        ChampFive, 
+                        IsWin, 
+                        MatchId, 
+                        TimeOfEntry, 
+                        Patch 
+            ) VALUES 
+            (
+                %(TeamComboKey)s,
+                %(ChampOne)s, 
+                %(ChampTwo)s, 
+                %(ChampThree)s, 
+                %(ChampFour)s, 
+                %(ChampFive)s, 
+                %(IsWin)s, 
+                %(MatchId)s, 
+                %(TimeOfEntry)s,
+                %(Patch)s
+            )"""
+
+
+def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry):
+    sortedChampArr = sorted(champArr)
+    team_event_row = {
+        'TeamComboKey': teamComboKey,
+        'ChampOne': sortedChampArr[0],
+        'ChampTwo': sortedChampArr[1],
+        'ChampThree': sortedChampArr[2],
+        'ChampFour': sortedChampArr[3],
+        'ChampFive': sortedChampArr[4],
+        'IsWin': isWin,
+        'MatchId': matchId,
+        'TimeOfEntry': timeOfEntry,
+        'Patch': patch
+    }
+    if (teamComboKey == 23038456099):
+        print (team_event_row)
+    return team_event_row
 
 def getWinnersAndLosers(matchDict):
     teamDict = {}
@@ -75,7 +126,11 @@ def getWinnersAndLosers(matchDict):
     losingChamps = []
     winningTeamId = ""
     losingTeamId = ""
-    
+
+    if not ("teams" in matchDict):
+        print("woohoo")
+        return
+
     for team in matchDict["teams"]:
         if "win" in team:
             if team["win"]=="Win":
@@ -84,9 +139,9 @@ def getWinnersAndLosers(matchDict):
                 losingTeamId = team["teamId"]
 
     if (winningTeamId == "") or (losingTeamId == ""):
-        return "";
+        return ""
 
-    #now find each participant that was on the winning team
+    # now find each participant that was on the winning team
     for participant in matchDict["participants"]:
         if participant["teamId"] == winningTeamId:
             winningChamps.append(participant["championId"])
@@ -96,9 +151,9 @@ def getWinnersAndLosers(matchDict):
     teamDict["losers"]  = losingChamps
     teamDict["winners"] = winningChamps
     
-    return teamDict;
+    return teamDict
 
-#Take an array of five champs and create a key  for those champs
+# Take an array of five champs and create a key  for those champs
 def champArrayToKey(champArray):
     key = 1
     for champ in champArray:
@@ -109,14 +164,6 @@ def champArrayToKey(champArray):
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
 
+matchDirectory = Path.cwd().parents
 
-team_files = loopOverFiles("../data/matchData")
-'''
-with open("malone_is_great.json", "r") as f:
-    team_files = json.load(f)
-
-with open("malone_is_great2.json", "w") as f:
-    for key in team_files:
-        team_files[key]["champs_prime"] = int(key)
-        client.malone.insert_one(team_files[key])
-'''
+team_files = loopOverFiles("../../matchData/euw1")

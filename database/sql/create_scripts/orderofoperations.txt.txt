@@ -1,0 +1,4 @@
+When running these scripts please follow this order:
+	teamcomps_database
+	teamcomps_db_champions
+	teamcomps_db_winlosseventfact
