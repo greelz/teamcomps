@@ -63,15 +63,20 @@ function createChampionSection() {
 function createFilterButton(role) {
     var img = dce('img');
     img.src = "./images/positions/" + role + ".png";
+    img.title = role;
     bindEvent(img, "click", function() {
         var str = "data-selected";
         var reset = false;
-        if (img.getAttribute(str)) {
+        if (img.getAttribute(str) === "1") {
             reset = true;
-            img.setAttribute(str, undefined);
+            img.removeAttribute(str);
             removeClass(img, "selected");
         }
         else {
+            for (let tempImg of $$("#positionsDiv img")) {
+                removeClass(tempImg, "selected");
+                tempImg.removeAttribute(str);
+            }
             img.setAttribute(str, "1");
             addClass(img, "selected")
         }
