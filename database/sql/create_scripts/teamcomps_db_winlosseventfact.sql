@@ -1,3 +1,4 @@
+USE teamcomps_db;
 CREATE TABLE `winlosseventfact` (
    `TeamComboKey` bigint(20) NOT NULL COMMENT 'This is the prime product of each ',
    `ChampOne` bigint(20) DEFAULT NULL,

@@ -1,3 +1,4 @@
+USE teamcomps_db;
 CREATE TABLE `champions` (
    `PrimeKey` bigint(20) NOT NULL COMMENT 'Prime number associated with champion. See <rootfolder>/teamcomps/python/assets/champions.json for source information.',
    `RiotKey` bigint(20) DEFAULT NULL,
