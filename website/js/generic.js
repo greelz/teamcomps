@@ -41,10 +41,26 @@ function removeElement(elem) {
     }
 }
 
-function doOnDelay(callback, delay) {
-    setTimeout(function () {
-        callback();
-    }, delay);
+function p(text, classList) {
+	var p = dce("p");
+	p.innerHTML = text;
+	if (classList) {
+		for (let cl of classList) {
+			addClass(p, cl);
+		}
+	}
+	return p;
+}
+
+function formatPercent(num) {
+	if (num) {
+		num *= 100;
+		return parseFloat(num).toFixed(1);
+	}
+}
+
+function doOnDelay(callback, delay, paramsObj) {
+    setTimeout(callback, delay, paramsObj);
 }
 
 function callAjax(url, callback, interval) {

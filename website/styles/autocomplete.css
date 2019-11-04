@@ -14,6 +14,7 @@
 	height: 31px;
 	line-height: 31px;
     list-style: none;
+	text-align: center;
 }
 
 .autocomplete:hover {

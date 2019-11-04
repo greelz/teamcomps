@@ -2,7 +2,7 @@
 /*global $, $$, addClass, removeClass, document, removeElement, insertAfter, callAjax,
          bindEvent, doOnDelay */
 
-function autocomplete(elem, source, searchCallback, styleCallback) {
+function autocomplete(elem, source, searchCallback, stylingCallback) {
     var associatedArray = [];
 
     (function generateAssociatedArray() {
@@ -17,19 +17,10 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
 
     // --------- DOM Manipulation ----------
 
-    function createItemImage(item_name) {
-        var img = document.createElement("img");
-        img.src = styleCallback(item_name);
-		addClass(img, "left");
-        return img;
-    }
-
     function saveAutocompleteToInput(elem, item_name) {
         elem.value = item_name;
-        if (styleCallback) {
-            var img = createItemImage(item_name);
-            elem.parentNode.insertBefore(img, elem);
-			addClass(elem, "slimFromPic");
+        if (stylingCallback) {
+			stylingCallback(item_name, elem);
         }
         if (searchCallback) {
             searchCallback(item_name);
@@ -65,8 +56,8 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
         });
         li.innerHTML = item_name.replace(new RegExp(elem.value, "gi"), "<strong>" + '$&' + "</strong>");
         ul.appendChild(li);
-        if (styleCallback) {
-            ul.insertBefore(createItemImage(item_name), li);
+        if (stylingCallback) {
+			stylingCallback(item_name, li);
         }
     }
 
@@ -177,9 +168,6 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
         removeElement($(".autocomplete"));
     });
 
-	bindEvent(document, "input", function() {
-		console.log("here");
-	});
 
 	bindEvent(elem, "set_text", function() {
 		removeElement(elem.previousSibling);
@@ -187,7 +175,6 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
 	});
 
     bindEvent(elem, "keydown", function (event) {
-		console.log("here");
         if (event.keyCode === 13) { // enter key
             event.preventDefault();
         } else if (event.keyCode === 40) { // down arrow
@@ -198,7 +185,9 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
             if ($(".autocomplete")) {
                 event.preventDefault();
             }
-        }
+        } else if (event.keyCode === 27) { // esc key
+			event.preventDefault();
+		}
     });
 
     bindEvent(elem, "keyup", function (event) {
@@ -215,7 +204,11 @@ function autocomplete(elem, source, searchCallback, styleCallback) {
             if ($(".autocomplete")) {
                 moveToAutocomplete("down");
                 event.preventDefault();
-            }
+			}
+        } else if (event.keyCode === 27) { // esc key
+			event.preventDefault();
+			removeElement($(".autocomplete"));
+
         } else if (event && event.target) {
             removeClass(elem, "slimFromPic");
             removeElement(elem.previousSibling);
