@@ -1,11 +1,17 @@
 'use strict';
 /*global document, window, XMLHttpRequest */
 /*jslint bitwise: true */
-var $ = function (selector) {
+var $ = function (selector, elem) {
+	if (elem) {
+		return elem.querySelector(selector);
+	}
     return document.querySelector(selector);
 };
 
-var $$ = function (selector) {
+var $$ = function (selector, elem) {
+	if (elem) {
+		return elem.querySelectorAll(selector);
+	}
     return document.querySelectorAll(selector);
 };
 

@@ -58,7 +58,7 @@ function createChampionSection() {
     positionsDiv.id = "positionsDiv";
     for (var idx in roles) {
         var role = roles[idx];
-        var btn = createFilterButton(role);
+        var btn = createFilterButton(role, $("#champs"));
         positionsDiv.appendChild(btn);
     }
     $("#champs").appendChild(positionsDiv);
@@ -68,7 +68,7 @@ function createChampionSection() {
     }
 }
 
-function createFilterButton(role) {
+function createFilterButton(role, div) {
     var img = dce('img');
     img.src = "./images/positions/" + role + ".png";
     img.title = role;
@@ -88,7 +88,7 @@ function createFilterButton(role) {
             img.setAttribute(str, "1");
             addClass(img, "selected")
         }
-        var champions = $$(".champ");
+        var champions = $$(".champ", div);
         for (let champion of champions) {
             var dataName = champion.getAttribute("data-name");
             if (!reset && (championDictionary.data[dataName].roles.indexOf(role) === -1)) {
