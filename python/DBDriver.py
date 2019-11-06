@@ -38,8 +38,8 @@ def loopOverFiles(directory):
 
                     if(len(writeable_events) >= 1000):
                         # write events to database, and clear the array
-                        writeable_events.clear()
                         cursor.executemany(insert_matches_command(), writeable_events)
+                        writeable_events.clear()
                         
                         
                 except Exception as error:
@@ -66,10 +66,10 @@ def process_match(match_data):
         winnerTeamKey = champArrayToKey(team_dict["winners"])
         
         eventsToReturn.append( 
-            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], match_data['gameVersion'], time) 
+            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId'])) 
             )
         eventsToReturn.append(
-            build_team_event_row(winnerTeamKey, team_dict['winners'], True, match_data['gameId'], match_data['gameVersion'], time)
+            build_team_event_row(winnerTeamKey, team_dict['winners'], True, match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId']))
         )
     return eventsToReturn
 
@@ -86,7 +86,8 @@ def insert_matches_command():
                         IsWin, 
                         MatchId, 
                         TimeOfEntry, 
-                        Patch 
+                        Patch,
+                        Region
             ) VALUES 
             (
                 %(TeamComboKey)s,
@@ -98,11 +99,14 @@ def insert_matches_command():
                 %(IsWin)s, 
                 %(MatchId)s, 
                 %(TimeOfEntry)s,
-                %(Patch)s
-            )"""
+                %(Patch)s,
+                %(Region)s
+            )
+            ON DUPLICATE KEY UPDATE
+            Region = VALUES(Region)"""
 
 
-def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry):
+def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry, region):
     sortedChampArr = sorted(champArr)
     team_event_row = {
         'TeamComboKey': teamComboKey,
@@ -114,7 +118,8 @@ def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEn
         'IsWin': isWin,
         'MatchId': matchId,
         'TimeOfEntry': timeOfEntry,
-        'Patch': patch
+        'Patch': patch,
+        'Region': region
     }
     if (teamComboKey == 23038456099):
         print (team_event_row)

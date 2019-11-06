@@ -10,6 +10,7 @@ CREATE TABLE `winlosseventfact` (
    `MatchId` bigint(20) DEFAULT NULL COMMENT 'Riot match identifier',
    `TimeOfEntry` datetime DEFAULT NULL,
    `Patch` varchar(75) DEFAULT NULL,
+   `Region` varchar(20) DEFAULT NULL,
    PRIMARY KEY (`TeamComboKey`),
    KEY `Champion1_idx` (`ChampOne`),
    KEY `Champion2_idx` (`ChampTwo`),
