@@ -13,32 +13,40 @@ function getBlankInputElement() {
     return null;
 }
 
+function autocompleteSaveCallback(champion_name) {
+	// First, add a new champion input if we can
+	tryAddNewChampionInputElem();
+
+	// Then, execute the search (mocked for now)
+	mockRequestResult(champion_name);
+}
+
 // Prioritize focusing on a blank input box
 // If not, then add a new box if there's fewer than 5
 // Otherwise, do nothing.
 function tryAddNewChampionInputElem() {
-	var champion_elements, elem = getBlankInputElement(), new_input;
+	var champion_elements, elem = getBlankInputElement(), newDiv;
     if (elem) {
         elem.focus();
     }
 	else {
 		champion_elements = $$(".champion_input");
 		if (champion_elements.length < 5) {
-			new_input = createChampionInputElem();
-			document.getElementById("championList").appendChild(new_input);
-			new_input.focus();
+			newDiv = createChampionInputDiv();
+			document.getElementById("championList").appendChild(newDiv);
+			newDiv.firstChild.focus();
 		}
 	}
 }
 
-function createChampionInputElem() {
+function createChampionInputDiv() {
 	var div = dce("div"), elem = dce("input"), champ_names = [], champ;
 	for (champ in championDictionary.data) {
 		champ_names.push(championDictionary.data[champ].name)
 	}
 	addClass(elem, "champion_input");
 	elem.placeholder = "Champion";
-	autocomplete(elem, champ_names, tryAddNewChampionInputElem, getChampionImgSrc);
+	autocomplete(elem, champ_names, autocompleteSaveCallback, getChampionImgSrc);
 	div.appendChild(elem);
 	return div;
 }
@@ -50,7 +58,7 @@ function createChampionSection() {
     positionsDiv.id = "positionsDiv";
     for (var idx in roles) {
         var role = roles[idx];
-        var btn = createFilterButton(role);
+        var btn = createFilterButton(role, $("#champs"));
         positionsDiv.appendChild(btn);
     }
     $("#champs").appendChild(positionsDiv);
@@ -60,7 +68,7 @@ function createChampionSection() {
     }
 }
 
-function createFilterButton(role) {
+function createFilterButton(role, div) {
     var img = dce('img');
     img.src = "./images/positions/" + role + ".png";
     img.title = role;
@@ -80,7 +88,7 @@ function createFilterButton(role) {
             img.setAttribute(str, "1");
             addClass(img, "selected")
         }
-        var champions = $$(".champ");
+        var champions = $$(".champ", div);
         for (let champion of champions) {
             var dataName = champion.getAttribute("data-name");
             if (!reset && (championDictionary.data[dataName].roles.indexOf(role) === -1)) {
@@ -124,14 +132,15 @@ function getChampionName(val) {
     return null;
 }
 
-function getChampionImgSrc(champion) {
+function getChampionImgSrc(champion_name, element) {
     // Since we'll have the champion display name, reformat it to
     // grab the champion key
-	champion = championDictionary.dataKeyFromHumanName[champion];
-	if (champion) {
-		return "images/champions/" + champion + ".png";
-	}
-	return "";
+	var img = dce("img");
+	var champion = championDictionary.dataKeyFromHumanName[champion_name];
+	img.src = "images/champions/" + champion + ".png";
+	element.parentNode.insertBefore(img, element);
+	addClass(element, "slimFromPic");
+	addClass(img, "left");
 }
 
 
@@ -166,6 +175,51 @@ function search(url, callback) {
 
 
 // --------- Request Callbacks -----------
+
+function mockRequestResult() {
+	// We'll simply mock a request until the web server actually has data
+	// Jordan and I agreed that we'd have something that looks like this:
+	// { winPct: .45454222, nextBestChampions: [riotKey1, riotKey2, ...] }
+	var numChamps = 10;
+	var availableChampions = Object.keys(championDictionary.dataKeyFromRiotKey), len = availableChampions.length;
+	var startSlice = Math.min(len - numChamps, parseInt(Math.random() * len));
+	var randomChamps = availableChampions.slice(startSlice, startSlice + numChamps);
+	var current_champions = $$(".champion_input");
+	var curr_champ_arr = [];
+	for (let champ of current_champions) {
+		var val = champ.value;
+		if (val !== "") {
+			var champName = championDictionary.dataKeyFromHumanName[val];
+			if (champName) {
+				var riotId = championDictionary.data[champName].key;
+				curr_champ_arr.push(riotId);
+			}
+		}
+	}
+
+	var mockResult = { 'championList': curr_champ_arr, 'winPct': Math.random(), 'nextBestChampions': randomChamps };
+
+	// Normally, we'd do some sort of ajax call here (get request)
+	// But now, I'll just simulate a delayed callback between 1-2 seconds... 
+	doOnDelay(drawResultToScreen, Math.random() * 2000, mockResult);
+}
+
+function drawResultToScreen(result) {
+	var nextBest = $("#nextBest"), winPct = $("#winPctP"), champName;
+	nextBest.innerHTML = "";
+
+	// Put the winning percentage on the screen...
+	winPct.innerHTML = formatPercent(result['winPct']) + "%";
+
+	nextBest.appendChild(p("Next best champions:", ["section_title"]));
+
+	for (let championId of result.nextBestChampions) {
+		champName = championDictionary.dataKeyFromRiotKey[championId];
+		var subsequentChamp = createChampionCard(champName);
+		subsequentChamp.appendChild(p(formatPercent(Math.random())));
+		nextBest.appendChild(subsequentChamp);
+	}
+}
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
@@ -206,64 +260,6 @@ function createChampionTable(champIds) {
     return table;
 }
 
-function bestChampCallback(response) {
-    var winPercent, total_games, champIds, best_champ, fragment, table, p;
-    response = JSON.parse(response);
-    winPercent = response.win_percent;
-    total_games = response.total_games;
-    champIds = response.champIds;
-    best_champ = response.champId;
-    fragment = document.createDocumentFragment();
-
-    if (best_champ) {
-        table = createChampionTable([best_champ].concat(champIds));
-        fragment.appendChild(table);
-
-        p = dce("p");
-        p.innerText = "Next best champion: " + getChampionName(best_champ);
-        fragment.appendChild(p);
-
-        p = dce("p");
-        p.innerText = "Win Percentage: " + (winPercent * 100).toFixed(1) + "%";
-        fragment.appendChild(p);
-
-        p = dce("p");
-        p.innerText = total_games + " games played together.";
-        fragment.appendChild(p);
-    } else {
-        p = dce("p");
-        p.innerText = "Sadly, we don't have enough data for these champions.";
-        fragment.appendChild(p);
-    }
-    $("#recommendations").innerHTML = "";
-    $("#recommendations").appendChild(fragment);
-}
-
-function winPercentCallback(response) {
-    var winPercent, total_games, champIds, fragment, table, p;
-    response = JSON.parse(response);
-    $("#recommendations").innerHTML = "";
-    winPercent = response.win_percent;
-    total_games = response.total_games;
-    champIds = response.champIds;
-    fragment = document.createDocumentFragment();
-    if (total_games > 0) {
-        table = createChampionTable(champIds);
-        fragment.appendChild(table);
-        p = dce("p");
-        p.innerText = "Win Percentage: " + (winPercent * 100).toFixed(1) + "%";
-        fragment.appendChild(p);
-
-        p = dce("p");
-        p.innerText = total_games + " games analyzed.";
-        fragment.appendChild(p);
-    } else {
-        p = dce("p");
-        p.innerText = "Sadly, we don't have enough data for these champions.";
-        fragment.appendChild(p);
-    }
-    $("#recommendations").appendChild(fragment);
-}
 
 // ---------- Theming ----------
 function changeTheme(mode, elem) {

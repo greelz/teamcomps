@@ -1,11 +1,17 @@
 'use strict';
 /*global document, window, XMLHttpRequest */
 /*jslint bitwise: true */
-var $ = function (selector) {
+var $ = function (selector, elem) {
+	if (elem) {
+		return elem.querySelector(selector);
+	}
     return document.querySelector(selector);
 };
 
-var $$ = function (selector) {
+var $$ = function (selector, elem) {
+	if (elem) {
+		return elem.querySelectorAll(selector);
+	}
     return document.querySelectorAll(selector);
 };
 
@@ -41,10 +47,26 @@ function removeElement(elem) {
     }
 }
 
-function doOnDelay(callback, delay) {
-    setTimeout(function () {
-        callback();
-    }, delay);
+function p(text, classList) {
+	var p = dce("p");
+	p.innerHTML = text;
+	if (classList) {
+		for (let cl of classList) {
+			addClass(p, cl);
+		}
+	}
+	return p;
+}
+
+function formatPercent(num) {
+	if (num) {
+		num *= 100;
+		return parseFloat(num).toFixed(1);
+	}
+}
+
+function doOnDelay(callback, delay, paramsObj) {
+    setTimeout(callback, delay, paramsObj);
 }
 
 function callAjax(url, callback, interval) {
