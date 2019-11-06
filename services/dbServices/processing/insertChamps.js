@@ -77,7 +77,7 @@ function InsertChampions(champsToInsert) {
     var query = 'INSERT INTO champions (PrimeKey, RiotKey, Name) VALUES ?';
     connection.query(query, [champsToInsert], function (err) {
         if (err)
-            throw err;
+            console.log(err);
     });
 }
 
