@@ -5,7 +5,7 @@ var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
     password : 'banana',
-    database : 'teamcomps_db_test'
+    database : 'teamcomps_db'
 });
 
 function printRequest(req)
