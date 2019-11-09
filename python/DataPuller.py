@@ -30,6 +30,10 @@ _SEASONS = {
 # The only required parameters are accountId and region
 def getMatchesByAccountId(accountID, region, season, queue = "", beginIndex = "", endIndex = ""):
 # queue, beginIndex, endIndex, beginTime, endTime, championId
+    if season in _SEASONS:
+        season = _SEASONS[season]
+    else:
+        return {}
     url = "https://" + region + ".api.riotgames.com/lol/match/v4/matchlists/by-account/" + str(accountID) + "?"
     url += "queue=" + queue + "&"
     url += "beginIndex=" + str(beginIndex) + "&"
