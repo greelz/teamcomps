@@ -3,9 +3,7 @@ import sys
 from pathlib import Path
 import json
 import generatePrimes as gp
-import mysql.connector as msc
 from datetime import datetime
-from datetime import timezone
 import traceback
 
 
@@ -55,7 +53,7 @@ def loopOverFiles(directory):
 
 def process_match(match_data):
     team_dict = getWinnersAndLosers(match_data)
-    if (not team_dict):
+    if not team_dict:
         return
     losers = {}
     winners = {}
@@ -168,7 +166,3 @@ def champArrayToKey(champArray):
 
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
-
-matchDirectory = Path.cwd().parents
-
-team_files = loopOverFiles("../../matchData/euw1")

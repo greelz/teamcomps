@@ -31,5 +31,3 @@ def modifyRunningData():
 
     with open("running_data2.json", "w") as f:
         json.dump(my_dic, f)
-
-modifyRunningData()

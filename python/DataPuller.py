@@ -35,41 +35,33 @@ def getMatchesByAccountId(accountID, region, season, queue = "", beginIndex = ""
     url += "beginIndex=" + str(beginIndex) + "&"
     url += "endIndex=" + str(endIndex) + "&"
     url += "season=" + season
-    req = requestWrapper(url)
-    if req:
-        return req.json
-    return None
+    return requestWrapper(url)
 
 def getMatch(matchId, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/match/v4/matches/" + str(matchId)
-    req = requestWrapper(url)
-    if req:
-        return req.json
-    return None
+    return requestWrapper(url)
 
 def getAccountIdByName(name, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + str(name)
     res = requestWrapper(url)
-    try:
-        return res.json["accountId"]
-    except KeyError:
+    if 'accountId' not in res:
+        print("Couldn't find summoner.")
         return None
+    else:
+        return res["accountId"]
 
 def getAccountNameById(playerId, region = "na1"):
     url = "https://" + region + ".api.riotgames.com/lol/summoner/v4/summoners/by-account/" + str(playerId)
     res = requestWrapper(url)
-    if res is not None:
-        return res.json["name"]
-    return ""
+    if 'name' in res:
+        return res["name"]
+    return None
 
 def getLeague(league, region):
     if league != "challenger" and league != "grandmaster":
         return None
     url = "https://" + region + ".api.riotgames.com/lol/league/v4/" + league + "leagues/by-queue/RANKED_SOLO_5x5"
-    try:
-        return requestWrapper(url).json
-    except:
-        return None
+    return requestWrapper(url)
 
 def requestWrapper(url, headers = {}):
     ''' Algorithm: 
@@ -87,24 +79,15 @@ def requestWrapper(url, headers = {}):
         # been hit). 
         if r.statusCode != 200:
             print('Something went wrong in Whoville, status code ' + str(r.statusCode))
-
-        if r.sleepTime > 0:
-            print("Hit our limit on api_key #" + str(current_key_index))
-            current_time = unix_time_millis(datetime.datetime.now())
-            sleep_until_times[current_key_index] = current_time + (r.sleepTime)
-            current_key_index += 1
-            if current_key_index >= len(API_KEYS):
-                current_key_index = 0
-
-            if current_time < sleep_until_times[current_key_index]:
-                seconds_to_sleep = int((sleep_until_times[current_key_index] - current_time) / 1000.0) + 1 #add 1 to be safe :)
-                print("We're getting a little too excited here time for sleep.")
-                print("Sleeping for " + str(seconds_to_sleep) + " seconds. Bye now!")
-                time.sleep(seconds_to_sleep) 
+            if r.sleepTime > 0:
+                print("Returning the time to sleep: " + str(r.sleepTime))
+                return { 'sleepTime': r.sleepTime }
             else:
-                sleep_until_times[current_key_index] = 0
+                return r.json
 
-    return r
+        else:
+            return r.json
+    return {}
     
 epoch = datetime.datetime.utcfromtimestamp(0)
 def unix_time_millis(dt = None):
@@ -126,9 +109,9 @@ class responseObject:
         rHeader = request.headers
 
         if self.statusCode == 429:
-            # Right now, let's just sleep for 2 mins...
+            # Right now, let's just sleep for 10 mins...
             # The retry-after seems buggy...
-            self.sleepTime = 120
+            self.sleepTime = 600
         else:
             self.sleepTime = 0
         return

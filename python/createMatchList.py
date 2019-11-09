@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import threading
+import time
 
 def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, players_to_add = 0, player_ids = {}):
     account_id = d.getAccountIdByName(summoner_name, region)
@@ -39,7 +40,7 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
 
 def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, region):
     games_to_download = []
-    if match_json and 'matches' in match_json:
+    if 'matches' in match_json:
         for game in match_json['matches']:
             if 'gameId' in game:
                 game_id = str(game['gameId'])
@@ -51,16 +52,24 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
     threads = []
     num_threads = len(games_to_download) # We know this won't be larger than 100
     players_arr = [[] for i in range(num_threads)]
+    time_to_sleep = [0 for i in range(num_threads)]
+    time_to_sleep.append(0)
     need_more_players = len(player_dic) < 1000
-    for i in range(len(games_to_download)):
-        games_dictionary[game_id] = 1
-        new_thread = threading.Thread(target=thread_function, args=(games_to_download[i], region, players_arr, need_more_players, i))
+    for i in range(num_threads):
+        games_dictionary[game_id] = ""
+        new_thread = threading.Thread(target=thread_function, args=(games_to_download[i], region, players_arr, need_more_players, i, time_to_sleep))
         threads.append(new_thread)
+        # Don't fire a thread immediately, wait just .1 seconds...
+        time.sleep(.05)
         new_thread.start()
 
     for idx, thread in enumerate(threads):
         thread.join()
 
+    sleep_time_seconds = max(time_to_sleep)
+    if sleep_time_seconds > 0:
+        print("Heading to bed for " + str(sleep_time_seconds))
+        time.sleep(sleep_time_seconds)
     if need_more_players:
         for group in players_arr:
             group = set(group)
@@ -70,11 +79,15 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
 
     return len(games_to_download)
 
-def thread_function(game_id, region, player_arr, need_more_players, index):
+def thread_function(game_id, region, player_arr, need_more_players, index, time_to_sleep):
     game_json = d.getMatch(game_id, region)
-    write_game_to_file(game_json, game_id, region)
-    if need_more_players:
-        save_player_ids(game_json, player_arr, index)
+    if 'sleepTime' in game_json:
+        print("Thread knows it should sleep. Return sleep value.")
+        time_to_sleep[index] = game_json['sleepTime']
+    else:
+        write_game_to_file(game_json, game_id, region)
+        if need_more_players:
+            save_player_ids(game_json, player_arr, index)
 
 def save_player_ids(match_json, player_arr, index):
     if match_json and 'participantIdentities' in match_json:
@@ -92,28 +105,40 @@ def write_game_to_file(match_json, game_id, region):
     with open(abspath, 'w') as f:
         json.dump(match_json, f)
 
-def build_game_ids(region):
+def build_game_ids(region, filename):
     directory = "../../matchData/" + region
     game_ids = {}
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    if filename:
+        print("Loading from ../../matchData/" + filename)
+        with open("../../matchData/" + filename, "r") as f:
+            game_ids = json.load(f)
+    print("Now walking " + directory + " to load existing files...")
     for root, dirs, files in os.walk(directory):
         for game_id in files:
-            game_ids[game_id[:-5]] = 1
+            game_ids[game_id[:-5]] = ""
 
+    print("We found " + str(len(game_ids)) + " existing games.")
     return game_ids
 
 if __name__ == "__main__":
+    filename = ""
     args = sys.argv
     if len(args) == 3:
         first_player = args[1]
         region = args[2]
+    elif len(args) == 4:
+        first_player = args[1]
+        region = args[2]
+        filename = args[3]
     else:
         region = "euw1"
         first_player = "Tam"
 
     print("Building a dictionary of existing games...")
-    game_ids = build_game_ids(region)
+    game_ids = build_game_ids(region, filename)
     players_list = { first_player: 1 }
     unique_players_to_add = 1000
 
