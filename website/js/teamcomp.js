@@ -212,11 +212,12 @@ function drawResultToScreen(result) {
 	winPct.innerHTML = formatPercent(result['winPct']) + "%";
 
 	nextBest.appendChild(p("Next best champions:", ["section_title"]));
+	nextBest.appendChild(p("These 10 champions synergize the best with the above composition.", ['section_subtitle']));
 
 	for (let championId of result.nextBestChampions) {
 		champName = championDictionary.dataKeyFromRiotKey[championId];
 		var subsequentChamp = createChampionCard(champName);
-		subsequentChamp.appendChild(p(formatPercent(Math.random())));
+		subsequentChamp.appendChild(p(formatPercent(Math.random()) + "%"));
 		nextBest.appendChild(subsequentChamp);
 	}
 }
