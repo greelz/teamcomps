@@ -43,8 +43,10 @@ module.exports = app;
  */
 
 var express = require("express");
+var cors = require('cors')
 var bodyParser= require('body-parser');
 var matchRouter = require('./routes/matches');
+var clientController = require('./processing/clientRequests');
 
 var app = express();
 
@@ -56,6 +58,27 @@ app.get("/url", (req, res, next) =>
    res.json(["Tony", "Lisa", "Michael", "Ginger", "Food"]); 
   }
 );
+
+app.options("/getWinPercentAndNextChamps", cors(), (req, res, next) =>
+{
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Accept", "application/json");
+  res.header("Content-Type", "application/json");
+  res.send();
+});// apparently this allows cors requests? I probably just shouldn't use a JSON body at this point huh
+app.post("/getWinPercentAndNextChamps", cors(), (req, res, next) =>
+{
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Accept", "application/json");
+  res.header("Content-Type", "application/json");
+  var queryResults;
+  clientController.getWinPercentage(req, (response) =>
+  {
+    res.json(response);
+    //res.send(response);
+  });
+  // res.send();
+});
 
 app.use('/matches', matchRouter);
 

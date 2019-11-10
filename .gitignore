@@ -1,0 +1,8 @@
+/services/dbServices/node_modules/*
+*.pyc
+notes_dontcommit
+python/running_data.json
+python/running_data2.json
+python/test.py
+services/dbServices/public/stylesheets/style.css
+services/dbServices/routes/users.js

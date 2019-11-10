@@ -59,6 +59,7 @@ function p(text, classList) {
 }
 
 function formatPercent(num) {
+    console.log(num);
 	if (num) {
 		num *= 100;
 		return parseFloat(num).toFixed(1);
@@ -69,33 +70,35 @@ function doOnDelay(callback, delay, paramsObj) {
     setTimeout(callback, delay, paramsObj);
 }
 
-function callAjax(url, callback, interval) {
-    if (window.XMLHttpRequest) {
-        var oReq = new XMLHttpRequest();
-        if (oReq.withCredentials === true) {
-            oReq.open("GET", url, true);
-            oReq.onload = function () {
-                if (oReq.readyState === 4 && oReq.status === 200) {
-                    if (interval) {
-                        clearInterval(interval);
-                    }
-                    callback(oReq.responseText);
-                }
-            };
-            oReq.send(null);
-        } else {
-            oReq.open("GET", url, true);
-            oReq.onload = function () {
-                if (oReq.readyState === 4 && oReq.status === 200) {
-                    if (interval) {
-                        clearInterval(interval);
-                    }
-                    callback(oReq.responseText);
-                }
-            };
-            oReq.send(null);
+/**
+ * @param  {string} url Endpoint that we are contacting via ajax
+ * @param  {function name(params) {
+     
+ }} callback
+ * @param  {int} interval
+ */
+function callAjax(url, callback, interval, body, bodyType) {
+    if (!window.XMLHttpRequest) { return; }
+    var oReq = new XMLHttpRequest();
+    // there used to be an if/else branching on oReq.withCredentials, but they were identical
+
+    oReq.open("POST", url);
+    oReq.onload = function () {
+        if (oReq.readyState === 4 && oReq.status === 200) {
+            if (interval) {
+                clearInterval(interval);
+            }
+            callback(oReq.responseText);
         }
+    };
+
+    if (bodyType === "JSON")
+    {
+        // need to set specific headers if we are sending a JSON body
+        oReq.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // body = JSON.stringify(body);
     }
+    oReq.send(body);
 }
 
 // This fixes an issue where IE doesn't actually know what

@@ -178,14 +178,14 @@ function search(url, callback) {
 
 function mockRequestResult() {
 	// We'll simply mock a request until the web server actually has data
-	// Jordan and I agreed that we'd have something that looks like this:
+	// Jordan and I agreed that we'd have something that looks like this: <--- Matt lied here he actually assumed it would be { winPct: {decimal}, nextBestChampions: [{riotKey1, winPct1}, {riotKey2, winPct2}, ...]} :)
 	// { winPct: .45454222, nextBestChampions: [riotKey1, riotKey2, ...] }
 	var numChamps = 10;
 	var availableChampions = Object.keys(championDictionary.dataKeyFromRiotKey), len = availableChampions.length;
 	var startSlice = Math.min(len - numChamps, parseInt(Math.random() * len));
 	var randomChamps = availableChampions.slice(startSlice, startSlice + numChamps);
 	var current_champions = $$(".champion_input");
-	var curr_champ_arr = [];
+    var curr_champ_arr = [];
 	for (let champ of current_champions) {
 		var val = champ.value;
 		if (val !== "") {
@@ -195,30 +195,38 @@ function mockRequestResult() {
 				curr_champ_arr.push(riotId);
 			}
 		}
-	}
+    }
+    
+    callAjax("http://lvh.me:2021/getWinPercentAndNextChamps", function(response) 
+    {
+        drawResultToScreen(JSON.parse(response));
+    }, null, JSON.stringify({'champs': curr_champ_arr}), "JSON");
 
 	var mockResult = { 'championList': curr_champ_arr, 'winPct': Math.random(), 'nextBestChampions': randomChamps };
 
 	// Normally, we'd do some sort of ajax call here (get request)
 	// But now, I'll just simulate a delayed callback between 1-2 seconds... 
-	doOnDelay(drawResultToScreen, Math.random() * 2000, mockResult);
+	// doOnDelay(drawResultToScreen, Math.random() * 2000, mockResult);
 }
 
 function drawResultToScreen(result) {
-	var nextBest = $("#nextBest"), winPct = $("#winPctP"), champName;
+	var nextBest = $("#nextBest"), winPercent = $("#winPctP"), champName;
 	nextBest.innerHTML = "";
 
+    console.log(result);
 	// Put the winning percentage on the screen...
-	winPct.innerHTML = formatPercent(result['winPct']) + "%";
+	winPercent.innerHTML = formatPercent(result['winPercent']) + "%";
 
-	nextBest.appendChild(p("Next best champions:", ["section_title"]));
-
-	for (let championId of result.nextBestChampions) {
-		champName = championDictionary.dataKeyFromRiotKey[championId];
+    nextBest.appendChild(p("Next best champions:", ["section_title"]));
+    
+    for (var i in result.nextBestChampions)
+    {
+        var championId = result.nextBestChampions[i].champId;
+        champName = championDictionary.dataKeyFromRiotKey[championId];
 		var subsequentChamp = createChampionCard(champName);
-		subsequentChamp.appendChild(p(formatPercent(Math.random())));
+		subsequentChamp.appendChild(p(formatPercent(result.nextBestChampions[i].winPercent)));
 		nextBest.appendChild(subsequentChamp);
-	}
+    }
 }
 
 function getRandomInt(max) {

@@ -36,5 +36,3 @@ for root, dirs, filenames in os.walk(directory):
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
 r = requests.post('http://localhost:2021/matches', data = json.dumps(writeable_events), headers = headers)
-
-print(json.dumps("lol"))
