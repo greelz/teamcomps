@@ -197,7 +197,7 @@ function mockRequestResult() {
 		}
     }
     
-    callAjax("http://lvh.me:2021/getWinPercentAndNextChamps", function(response) 
+    callAjax("http://teamcomps.org:2021/getWinPercentAndNextChamps", function(response) 
     {
         drawResultToScreen(JSON.parse(response));
     }, null, JSON.stringify({'champs': curr_champ_arr}), "JSON");
