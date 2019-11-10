@@ -120,7 +120,6 @@ hr {
 
 .champ:hover {
 	cursor: pointer;
-	background-color: #efefef;
 }
 
 .champ {
@@ -156,7 +155,6 @@ hr {
 
 #positionsDiv > img:hover {
     cursor: pointer;
-    background-color: #efefef;
 }
 
 #positionsDiv > img {
@@ -166,14 +164,16 @@ hr {
     width: 30px;
 }
 
-#positionsDiv .selected {
-    background-color: #efefef;
-}
-
 .nodisp {
     display: none !important;
 }
 
 #result {
 	text-align: center;
+}
+
+.section_subtitle {
+    font-size: 12px;
+    text-align: left;
+    margin-bottom: 10px;
 }

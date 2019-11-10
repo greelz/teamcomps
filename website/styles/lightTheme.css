@@ -66,3 +66,15 @@ input:focus, textarea:focus {
 	background-color: darkgrey;
 	outline: 1px solid slategrey;
 }
+
+.champ:hover {
+    background-color: #efefef;
+}
+
+#positionsDiv > img:hover {
+    background-color: #efefef;
+}
+
+#positionsDiv .selected {
+    background-color: #efefef;
+}

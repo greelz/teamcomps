@@ -65,3 +65,16 @@ input, textarea {
 	border: 1px solid gray;
 	color: white;
 }
+
+.champ:hover {
+    background-color: #323232;
+}
+
+#positionsDiv > img:hover {
+    background-color: #323232;
+}
+
+#positionsDiv .selected {
+    background-color: #323232;
+}
+

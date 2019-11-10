@@ -215,16 +215,17 @@ function drawResultToScreen(result) {
 
     console.log(result);
 	// Put the winning percentage on the screen...
-	winPercent.innerHTML = formatPercent(result['winPercent']) + "%";
-
+    winPercent.innerHTML = formatPercent(result['winPercent']) + "%";
+    
     nextBest.appendChild(p("Next best champions:", ["section_title"]));
+	nextBest.appendChild(p("These 10 champions synergize the best with the above composition.", ['section_subtitle']));
     
     for (var i in result.nextBestChampions)
     {
         var championId = result.nextBestChampions[i].champId;
         champName = championDictionary.dataKeyFromRiotKey[championId];
 		var subsequentChamp = createChampionCard(champName);
-		subsequentChamp.appendChild(p(formatPercent(result.nextBestChampions[i].winPercent)));
+		subsequentChamp.appendChild(p(formatPercent(result.nextBestChampions[i].winPercent) + "%"));
 		nextBest.appendChild(subsequentChamp);
     }
 }
