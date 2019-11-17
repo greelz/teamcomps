@@ -3,23 +3,23 @@ import sys
 from pathlib import Path
 import json
 import generatePrimes as gp
+import mysql.connector as msc
 from datetime import datetime
 import traceback
 
 
 "This module is meant to handle getting the pulled data from the files"
 
-prime_nums = gp.getPrimes(1000)
+prime_nums =  gp.getPrimes(1000)
 
 def loopOverFiles(directory):
     writeable_events = []
     num_processed = 0
-    num_added = 0
     temp_events = []
-    my_SQL_conn = msc.Connect(user = 'root', password='banana', host='127.0.0.1', database='teamcomps_db', port=3306)
+    my_SQL_conn = msc.Connect(user = 'root', password='banana', host='127.0.0.1', database='teamcomps_db', port=3306) # TODO config
     cursor = my_SQL_conn.cursor()
 
-    for root, dirs, filenames in os.walk(directory):
+    for _, _, filenames in os.walk(directory):
         for filename in filenames:
             #get winners and losers
             num_processed += 1
@@ -42,6 +42,7 @@ def loopOverFiles(directory):
                         
                 except Exception as error:
                     print(fullFile)
+                    print(str(error))
                     traceback.print_exc()
                      
 
@@ -55,8 +56,7 @@ def process_match(match_data):
     team_dict = getWinnersAndLosers(match_data)
     if not team_dict:
         return
-    losers = {}
-    winners = {}
+
     eventsToReturn = []
     if "losers" and "winners" in team_dict:
         time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -64,16 +64,18 @@ def process_match(match_data):
         winnerTeamKey = champArrayToKey(team_dict["winners"])
         
         eventsToReturn.append( 
-            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId'])) 
+            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], 
+            match_data['gameVersion'], time, str(match_data['platformId']), int(match_data['gameDuration'])) 
             )
         eventsToReturn.append(
-            build_team_event_row(winnerTeamKey, team_dict['winners'], True, match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId']))
+            build_team_event_row(winnerTeamKey, team_dict['winners'], True, 
+            match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId']), int(match_data['gameDuration']))
         )
     return eventsToReturn
 
 
 def insert_matches_command():
-    return """INSERT INTO winlosseventfact 
+    return """REPLACE INTO winlosseventfact 
             ( 
                         TeamComboKey, 
                         ChampOne, 
@@ -85,7 +87,8 @@ def insert_matches_command():
                         MatchId, 
                         TimeOfEntry, 
                         Patch,
-                        Region
+                        Region,
+                        Duration
             ) VALUES 
             (
                 %(TeamComboKey)s,
@@ -98,13 +101,14 @@ def insert_matches_command():
                 %(MatchId)s, 
                 %(TimeOfEntry)s,
                 %(Patch)s,
-                %(Region)s
+                %(Region)s,
+                %(Duration)s,
             )
             ON DUPLICATE KEY UPDATE
             Region = VALUES(Region)"""
 
 
-def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry, region):
+def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry, region, duration):
     sortedChampArr = sorted(champArr)
     team_event_row = {
         'TeamComboKey': teamComboKey,
@@ -117,10 +121,10 @@ def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEn
         'MatchId': matchId,
         'TimeOfEntry': timeOfEntry,
         'Patch': patch,
-        'Region': region
+        'Region': region,
+        'Duration': duration
     }
-    if (teamComboKey == 23038456099):
-        print (team_event_row)
+    
     return team_event_row
 
 def getWinnersAndLosers(matchDict):
@@ -131,7 +135,6 @@ def getWinnersAndLosers(matchDict):
     losingTeamId = ""
 
     if not ("teams" in matchDict):
-        print("woohoo")
         return
 
     for team in matchDict["teams"]:
@@ -163,6 +166,3 @@ def champArrayToKey(champArray):
         key *= prime_nums[champ - 1]
 
     return key
-
-def unix_time_millis(dt):
-    return (dt - epoch).total_seconds() * 1000.0

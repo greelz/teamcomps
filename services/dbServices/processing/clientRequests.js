@@ -3,10 +3,10 @@ var mysql = require('mysql');
 function getWinPercentage(req, callback)
 {
     var connection = mysql.createConnection({
-        host     : 'localhost',
-        user     : 'root',
-        password : 'banana',
-        database : 'teamcomps_db'
+        host     : 'localhost', // TODO config
+        user     : 'root', // TODO config
+        password : 'banana', // TODO config
+        database : 'teamcomps_db' // TODO config
     });
     connection.connect();
 
@@ -22,6 +22,7 @@ function getWinPercentage(req, callback)
     var where = 'WHERE ' + champClauses.join(" AND ");
     var query = selectStatement + where;
     var winPercent;
+    console.log(query);
 
     connection.query(query, function (err, result, fields) {
         winPercent = result[0].winPercent;    
@@ -40,10 +41,10 @@ function getWinPercentage(req, callback)
 function getNextTenBestChamps(req, callback, response)
 {
     var connection = mysql.createConnection({
-        host     : 'localhost',
-        user     : 'root',
-        password : 'banana',
-        database : 'teamcomps_db'
+        host     : 'localhost', // TODO config
+        user     : 'root', // TODO config
+        password : 'banana', // TODO config
+        database : 'teamcomps_db' // TODO config
     });
     connection.connect();
 
