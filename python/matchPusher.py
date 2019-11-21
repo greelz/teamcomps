@@ -19,7 +19,7 @@ def pushMatchesToSiteFromZip(directory):
                 try:
                     match = json.loads(match_json.read())
                     temp_events = dbd.process_match(match) # seperate this line and the next so that we can keep count of "valid" matches
-                    if (not temp_events):
+                    if not temp_events:
                         continue # don't fail for malformed games
                     
                     rowCount += len(temp_events)

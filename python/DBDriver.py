@@ -1,90 +1,46 @@
-import os
-import sys
-from pathlib import Path
 import json
-import generatePrimes as gp
-from datetime import datetime
-import traceback
 
+# This file takes match data from a riot game, parses it, and returns 
+# relevant information for teamcomps.org. Generally, that's who won,
+# the patch, region, duration of game, and champions involved.
 
-"This module is meant to handle getting the pulled data from the files"
-
-prime_nums =  gp.getPrimes(1000)
-
+def getChampionDictionary():
+    champs = {}
+    with open("assets/jschamp_data.json", "r") as f:
+        champs = json.load(f)
+    return champs
 
 def process_match(match_data):
+    champion_dictionary = getChampionDictionary()
     team_dict = getWinnersAndLosers(match_data)
     if not team_dict:
         return
 
-    eventsToReturn = []
+    events_to_return = []
     if "losers" and "winners" in team_dict:
-        time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        loserTeamKey = champArrayToKey(team_dict["losers"])
-        winnerTeamKey = champArrayToKey(team_dict["winners"])
-        
-        eventsToReturn.append( 
-            build_team_event_row(loserTeamKey, team_dict['losers'], False, match_data['gameId'], 
-            match_data['gameVersion'], time, str(match_data['platformId']), int(match_data['gameDuration'])) 
-            )
-        eventsToReturn.append(
-            build_team_event_row(winnerTeamKey, team_dict['winners'], True, 
-            match_data['gameId'], match_data['gameVersion'], time, str(match_data['platformId']), int(match_data['gameDuration']))
-        )
-    return eventsToReturn
+        events_to_return.append(build_team_event_row(team_dict['losers'], False, match_data['gameId'], match_data['gameVersion'], str(match_data['platformId']), match_data['gameDuration'], champion_dictionary))
+        events_to_return.append(build_team_event_row(team_dict['winners'], True, match_data['gameId'], match_data['gameVersion'], str(match_data['platformId']), match_data['gameDuration'], champion_dictionary))
 
+    if len(events_to_return) == 2:
+        return events_to_return
+    else:
+        return None
 
-def insert_matches_command():
-    return """REPLACE INTO winlosseventfact 
-            ( 
-                        TeamComboKey, 
-                        ChampOne, 
-                        ChampTwo, 
-                        ChampThree, 
-                        ChampFour, 
-                        ChampFive, 
-                        IsWin, 
-                        MatchId, 
-                        TimeOfEntry, 
-                        Patch,
-                        Region,
-                        Duration
-            ) VALUES 
-            (
-                %(TeamComboKey)s,
-                %(ChampOne)s, 
-                %(ChampTwo)s, 
-                %(ChampThree)s, 
-                %(ChampFour)s, 
-                %(ChampFive)s, 
-                %(IsWin)s, 
-                %(MatchId)s, 
-                %(TimeOfEntry)s,
-                %(Patch)s,
-                %(Region)s,
-                %(Duration)s,
-            )
-            ON DUPLICATE KEY UPDATE
-            Region = VALUES(Region)"""
-
-
-def build_team_event_row(teamComboKey, champArr, isWin, matchId, patch, timeOfEntry, region, duration):
-    sortedChampArr = sorted(champArr)
+def build_team_event_row(champArr, isWin, matchId, patch, region, duration, champion_dictionary):
+    champions = [champion_dictionary['dataKeyFromRiotKey'][str(key)] for key in champArr]
     team_event_row = {
-        'TeamComboKey': teamComboKey,
-        'ChampOne': sortedChampArr[0],
-        'ChampTwo': sortedChampArr[1],
-        'ChampThree': sortedChampArr[2],
-        'ChampFour': sortedChampArr[3],
-        'ChampFive': sortedChampArr[4],
-        'IsWin': isWin,
-        'MatchId': matchId,
-        'TimeOfEntry': timeOfEntry,
-        'Patch': patch,
-        'Region': region,
-        'Duration': duration
+    'ChampOne': champions[0],
+    'ChampTwo': champions[1],
+    'ChampThree': champions[2],
+    'ChampFour': champions[3],
+    'ChampFive': champions[4],
+    'IsWin': isWin,
+    'MatchId': matchId,
+    'Patch': patch,
+    'Region': region,
+    'Duration': duration
     }
-    
+
     return team_event_row
 
 def getWinnersAndLosers(matchDict):
@@ -94,7 +50,7 @@ def getWinnersAndLosers(matchDict):
     winningTeamId = ""
     losingTeamId = ""
 
-    if not ("teams" in matchDict):
+    if not "teams" in matchDict:
         return
 
     for team in matchDict["teams"]:
@@ -104,7 +60,7 @@ def getWinnersAndLosers(matchDict):
             elif team["win"] == "Fail":
                 losingTeamId = team["teamId"]
 
-    if (winningTeamId == "") or (losingTeamId == ""):
+    if winningTeamId == "" or losingTeamId == "":
         return ""
 
     # now find each participant that was on the winning team
@@ -116,13 +72,5 @@ def getWinnersAndLosers(matchDict):
 
     teamDict["losers"]  = losingChamps
     teamDict["winners"] = winningChamps
-    
+
     return teamDict
-
-# Take an array of five champs and create a key  for those champs
-def champArrayToKey(champArray):
-    key = 1
-    for champ in champArray:
-        key *= prime_nums[champ - 1]
-
-    return key
