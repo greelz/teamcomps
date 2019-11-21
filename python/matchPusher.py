@@ -32,6 +32,9 @@ def pushMatchesToSiteFromZip(directory):
                         writeable_events.clear()
                 except Exception as error:
                     pass
+    # Post the remaining games...
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
 
 
 def pushMatchesToSite(directory):
