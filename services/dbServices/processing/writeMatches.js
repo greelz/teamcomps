@@ -1,6 +1,12 @@
-var fs = require('fs');
+var constants = require('./constants');
 var mysql = require('mysql');
 
+var champNames = constants.getChampNames();
+
+
+var errorLogged = false;
+///
+///
 function printRequest(req)
 {
     var connection = mysql.createConnection({
@@ -11,19 +17,36 @@ function printRequest(req)
     });
 
     connection.connect();
-    var query='REPLACE INTO winlosseventfact (TeamComboKey, ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive, IsWin, MatchId, TimeOfEntry, Patch, Region, Duration) VALUES ?';
+    var query=`REPLACE INTO winlosseventfactwide (${champNames.join(', ')}, IsWin, MatchId, Patch, Region, Duration) VALUES ?`;
     var inserts = [];
    
     for (var element in req.body)
     {
         var entry = req.body[element];
-        var row = [entry['TeamComboKey'], entry['ChampOne'], entry['ChampTwo'], entry['ChampThree'], entry['ChampFour'], entry['ChampFive'], entry['IsWin'], entry['MatchId'], entry['TimeOfEntry'], entry['Patch'], entry['Region'], entry['Duration']];
+
+        var row = generateChampValuesFromRequest(entry);
+        row.push(entry['IsWin']);
+        row.push(entry['MatchId']);
+        row.push(entry['Patch']);
+        row.push(entry['Region']);
+        row.push(entry['Duration']);
+
         inserts.push(row);
     }
     
     connection.query(query, [inserts], function (err) {
          if (err)
-             console.log(err.message);
+         {
+            console.log(err.message);
+            if (!errorLogged)
+            {
+                console.log(query);
+                errorLogged = true;
+            }
+            
+
+         }
+             
      }); 
 
     console.log('Successfully inserted matches!');
@@ -31,6 +54,25 @@ function printRequest(req)
     // if we don't do this it can lead to too many connection errors
     connection.end()
 }
+
+function generateChampValuesFromRequest(entry)
+{
+    var bitValues = [];
+    var bitDict = constants.getChampBitDict();
+    bitDict[entry['ChampOne']] = true;
+    bitDict[entry['ChampTwo']] = true;
+    bitDict[entry['ChampThree']] = true;
+    bitDict[entry['ChampFour']] = true;
+    bitDict[entry['ChampFive']] = true;
+
+    for (var champName in bitDict)
+    {
+        bitValues.push(bitDict[champName]);
+    }
+
+    return bitValues;
+}
+
 module.exports = {
     printRequest: printRequest,
 }

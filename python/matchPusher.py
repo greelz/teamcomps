@@ -71,6 +71,7 @@ if __name__ == "__main__":
     #     It is assumed that the directory provided has one to many <matchId>.json files
 
     num_args = len(sys.argv)
+    zipped = False
     # -z: whether or not the folder is a zipped file
     directory = ""
     for indx, arg in enumerate(sys.argv):
