@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 import time
+from zipfile import ZipFile
 
 def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, players_to_add = 0, player_ids = {}):
     account_id = d.getAccountIdByName(summoner_name, region)
@@ -107,14 +108,22 @@ def write_game_to_file(match_json, game_id, region, season):
 
 def build_game_ids(region, season, filename):
     directory = "../../matchData/" + season + "/" + region
+    game_ids_dir = "../../matchData/" + season + "/"
     game_ids = {}
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     if filename:
-        print("Loading from ../../matchData/" + season + "/" + filename)
-        with open("../../matchData/" + season + "/" + filename, "r") as f:
-            game_ids = json.load(f)
+        print("Loading from " + game_ids_dir + filename)
+        if ".zip" in filename:
+            with ZipFile(game_ids_dir + filename, 'r') as f:
+                for filename in f.namelist():
+                    match_id = filename[len(region) + 1:-5]
+                    game_ids[match_id] = ""
+
+        else:
+            with open(game_ids_dir + filename, "r") as f:
+                game_ids = json.load(f)
     print("Now walking " + directory + " to load existing files...")
     for root, dirs, files in os.walk(directory):
         for game_id in files:
@@ -129,6 +138,7 @@ if __name__ == "__main__":
     # -f: filename to parse existing game IDs 
     # -r: region to use
     # -s: season to read from
+    # -d: directory to parse games from
     # python createMatchList.py -n greelz -f test.xml -r na1 -s season2019
     region = 'na1'
     season = 'SEASON2019'
@@ -138,11 +148,11 @@ if __name__ == "__main__":
     for indx, arg in enumerate(sys.argv):
         if indx == num_args - 1:
             break
-        if arg == '-n':
+        if arg == '-n': 
             first_player = sys.argv[indx + 1]
-        if arg == '-f':
+        if arg == '-f': 
             filename = sys.argv[indx + 1]
-        if arg == '-r':
+        if arg == '-r': 
             region = sys.argv[indx + 1]
         if arg == '-s':
             temp_season = sys.argv[indx + 1].upper()
@@ -153,7 +163,7 @@ if __name__ == "__main__":
     print("Building a dictionary of existing games...")
     game_ids = build_game_ids(region, season, filename)
     players_list = { first_player: 1 }
-    unique_players_to_add = 1000
+    unique_players_to_add = 5000
 
     # From the seed account, add <n> more summoners, then loop indefinitely
     getAllMatchesForSummoner(first_player, season, region, game_ids, unique_players_to_add, players_list)
