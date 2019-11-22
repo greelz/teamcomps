@@ -12,7 +12,7 @@ function printRequest(req)
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : 'banana', // TODO config
+        password : '', // TODO config
         database : 'teamcomps_db' // TODO config
     });
 
