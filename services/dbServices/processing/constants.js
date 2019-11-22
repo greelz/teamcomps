@@ -162,7 +162,7 @@ function getChampBitDict()
     var champBitDict = [];
     for (var riotKey in champDict)
     {
-        champBitDict[champDict[riotKey]] = false;
+        champBitDict[champDict[riotKey]] = null;
     }
     return champBitDict;
 }

@@ -59,11 +59,11 @@ function generateChampValuesFromRequest(entry)
 {
     var bitValues = [];
     var bitDict = constants.getChampBitDict();
-    bitDict[entry['ChampOne']] = true;
-    bitDict[entry['ChampTwo']] = true;
-    bitDict[entry['ChampThree']] = true;
-    bitDict[entry['ChampFour']] = true;
-    bitDict[entry['ChampFive']] = true;
+    bitDict[entry['ChampOne']] = "";
+    bitDict[entry['ChampTwo']] = "";
+    bitDict[entry['ChampThree']] = "";
+    bitDict[entry['ChampFour']] = "";
+    bitDict[entry['ChampFive']] = "";
 
     for (var champName in bitDict)
     {
