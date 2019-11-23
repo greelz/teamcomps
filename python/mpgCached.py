@@ -81,7 +81,7 @@ def doInserts():
 
 def insertor(cursor, table_name, columns, values):
     len_thing = len(columns.split(","))
-    query = "INSERT INTO " + table_name + columns + "VALUES (" + "%s," * (len_thing - 1) + "%s) ON DUPLICATE KEY UPDATE"
+    query = "INSERT INTO " + table_name + columns + "VALUES (" + "%s," * (len_thing - 1) + "%s) ON DUPLICATE KEY UPDATE Games = Games + %s, Wins = Wins + %s"
     cursor.execute(query, values)
 
 
