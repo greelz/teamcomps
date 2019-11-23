@@ -61,26 +61,30 @@ while row is not None:
 
     row = cursor.fetchone()
 
+def doInserts():
+    print("inserting data")
+    for key in cacheDict:
+        splits = key.split("|")
+        champs = splits[0].split(",")
+        patch = splits[1]
+        region = splits[2]
+        if len(champs) == 1:
+            insertor(cursor, "singlecache", " (ChampOne, Patch, Region, Games, Wins) ", (champs[0], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+        elif len(champs) == 2:
+            insertor(cursor, "doublecache", " (ChampOne, ChampTwo, Patch, Region, Games, Wins) ", (champs[0], champs[1], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+        elif len(champs) == 3:
+            insertor(cursor, "triplecache", " (ChampOne, ChampTwo, ChampThree, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+        elif len(champs) == 4:
+            insertor(cursor, "quadruplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+        elif len(champs) == 5:
+            insertor(cursor, "quintuplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], champs[4], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+
 def insertor(cursor, table_name, columns, values):
     len_thing = len(columns.split(","))
     query = "INSERT INTO " + table_name + columns + "VALUES (" + "%s," * (len_thing - 1) + "%s) ON DUPLICATE KEY UPDATE"
     cursor.execute(query, values)
 
-for key in cacheDict:
-    splits = key.split("|")
-    champs = splits[0].split(",")
-    patch = splits[1]
-    region = splits[2]
-    if len(champs) == 1:
-        insertor(cursor, "singlecache", " (ChampOne, Patch, Region, Games, Wins) ", (champs[0], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
-    elif len(champs) == 2:
-        insertor(cursor, "doublecache", " (ChampOne, ChampTwo, Patch, Region, Games, Wins) ", (champs[0], champs[1], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
-    elif len(champs) == 3:
-        insertor(cursor, "triplecache", " (ChampOne, ChampTwo, ChampThree, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
-    elif len(champs) == 4:
-        insertor(cursor, "quadruplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
-    elif len(champs) == 5:
-        insertor(cursor, "quintuplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], champs[4], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
+
 
 cursor.close()
 mySQLConn.commit()
