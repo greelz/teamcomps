@@ -145,7 +145,7 @@ function getNextTenBestChamps(req, callback, response)
             else { return 1; }
         })
 
-        response.nextBestChampions = nextBestChampions.slice(0,10);
+        response.nextBestChampions = nextBestChampions.slice(nextBestChampions.length - 10,nextBestChampions.length);
 
         console.log(response);
         connection.end();
