@@ -77,7 +77,7 @@ function getWinPercentage(req, callback)
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : 'banana', // TODO config
+        password : '', // TODO config
         database : 'teamcomps_db' // TODO config
     });
     connection.connect();
@@ -95,6 +95,7 @@ function getWinPercentage(req, callback)
          {
             console.log(err);
          }
+         console.log(result);
         var response = {'winPercent': result[0].wins / (result[0].wins + result[0].losses)};
         console.log(response);
         connection.end();
@@ -114,12 +115,12 @@ function getNextTenBestChamps(req, callback, response)
         return callback(response);
     }
 
-    var query = `SELECT COUNT(Wins) as wins, COUNT(Games) as losses, ChampThree as champ From ${getCacheTableName(champRiotIds.length + 1)} ${getChampWhereClauseForCacheTable(champRiotIds)} GROUP BY ${getChampColumnName(champRiotIds.length + 1)}`
+    var query = `SELECT COUNT(Wins) as wins, COUNT(Games) as losses, ${getChampColumnName(champRiotIds.length)} as champ From ${getCacheTableName(champRiotIds.length + 1)} ${getChampWhereClauseForCacheTable(champRiotIds)} GROUP BY ${getChampColumnName(champRiotIds.length)}`
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : 'banana', // TODO config
+        password : '', // TODO config
         database : 'teamcomps_db' // TODO config
     });
     connection.connect();
