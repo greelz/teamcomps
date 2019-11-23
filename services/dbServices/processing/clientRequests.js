@@ -1,4 +1,28 @@
 var mysql = require('mysql');
+var database = 'winlosseventfactwide';
+var constants = require('./constants');
+
+var champs = constants.champDict;
+
+var champNames = [];
+for (var riotKey in champs)
+{
+    champNames.push(champs[riotKey]);
+}
+
+// 
+function getNextChampionColumnSelectStatment(champNames)
+{
+    columnSelections = [];
+    // SELECT
+    // SUM(<champName>) as <champName>
+    for (var champName in champNames)
+    {
+        var column = `SUM(${champName}) as ${champName}`;
+        columnSelections.push(column);
+    }
+    return `SELECT ${columnSelections.join(',')} FROM ${databaseName}`;
+}
 
 function getWinPercentage(req, callback)
 {
@@ -10,16 +34,15 @@ function getWinPercentage(req, callback)
     });
     connection.connect();
 
-    var champClauses = [];
+    var champNames = [];
 
     for (var element in req.body['champs'])
     {
-        var clause = generateChampWhereClause(req.body['champs'][element]);
-        champClauses.push(clause);
+        champNames.push(req.body['champs'][element]);
     }
 
-    var selectStatement = 'SELECT sum(IsWin = 1) / count(MatchId) AS winPercent FROM winlosseventfact '
-    var where = 'WHERE ' + champClauses.join(" AND ");
+    var selectStatement = 'SELECT sum(IsWin = 1) / count(MatchId) AS winPercent FROM winlosseventfactwide '
+    var where = 'WHERE ' + champNames.join(" AND ");
     var query = selectStatement + where;
     var winPercent;
     console.log(query);

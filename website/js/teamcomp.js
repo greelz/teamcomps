@@ -191,8 +191,7 @@ function mockRequestResult() {
 		if (val !== "") {
 			var champName = championDictionary.dataKeyFromHumanName[val];
 			if (champName) {
-				var riotId = championDictionary.data[champName].key;
-				curr_champ_arr.push(riotId);
+				curr_champ_arr.push(champName);
 			}
 		}
     }
