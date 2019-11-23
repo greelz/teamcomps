@@ -141,11 +141,11 @@ function getNextTenBestChamps(req, callback, response)
 
         nextBestChampions.sort(function(a, b)
         {
-            if(a.winPercent < b.winPercent)  { return -1; }
-            else { return 1; }
+            if(a.winPercent < b.winPercent)  { return 1; }
+            else { return -1; }
         })
 
-        response.nextBestChampions = nextBestChampions.slice(nextBestChampions.length - 10,nextBestChampions.length);
+        response.nextBestChampions = nextBestChampions.slice(0,10);
 
         console.log(response);
         connection.end();
