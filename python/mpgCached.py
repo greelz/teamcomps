@@ -81,10 +81,9 @@ def doInserts():
 
 def insertor(cursor, table_name, columns, values):
     len_thing = len(columns.split(","))
-    query = "INSERT INTO " + table_name + columns + "VALUES (" + "%s," * (len_thing - 1) + "%s) ON DUPLICATE KEY UPDATE Games = Games + %s, Wins = Wins + %s"
+
+    query = "INSERT INTO " + table_name + columns + "VALUES (" + "%s," * (len_thing - 1) + "%s) ON DUPLICATE KEY UPDATE Games = Games + " + str(values[len(values)-2]) + ", Wins = Wins + "+ str(values[len(values)-1])
     cursor.execute(query, values)
-
-
 
 cursor.close()
 mySQLConn.commit()
