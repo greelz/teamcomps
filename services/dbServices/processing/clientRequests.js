@@ -149,7 +149,7 @@ function getNextTenBestChamps(req, callback, response)
 
         for (var champ in champPercents)
         {
-            var row = {"champId": champ[i].champId, "winPercent": champ[i].winPercent};
+            var row = {"champId": champ.champId, "winPercent": champ.winPercent};
             nextBestChampions.push(row);
         }
 
