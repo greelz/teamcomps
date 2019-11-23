@@ -130,22 +130,28 @@ function getNextTenBestChamps(req, callback, response)
         {
            console.log(err);
         }
-        console.log(result.length);
 
+        var champPercents = [];
         var nextBestChampions = [];
         for (var i = 0; i < result.length; i ++)
         {
             var champPercentTuple = {};
             champPercentTuple.champId = result[i].champ;
             champPercentTuple.winPercent = (result[i].wins) / (result[i].wins + result[i].losses);
-            nextBestChampions.push(champPercentTuple);
+            champPercents.push(champPercentTuple);
         }
 
-        nextBestChampions.sort(function(a, b)
+        champPercents.sort(function(a, b)
         {
             if(a.winPercent < b.winPercent)  { return -1; }
             else { return 1; }
         })
+
+        for (var champ in champPercents)
+        {
+            var row = {"champId": champ[i].champId, "winPercent": champ[i].winPercent};
+            nextBestChampions.push(row);
+        }
 
         response.nextBestChampions = nextBestChampions;
 
