@@ -186,13 +186,17 @@ function mockRequestResult() {
 	var randomChamps = availableChampions.slice(startSlice, startSlice + numChamps);
 	var current_champions = $$(".champion_input");
     var curr_champ_arr = [];
-	for (let champ of current_champions) {
-		var val = champ.value;
+    for (let champ of current_champions) 
+    {
+        var val = champ.value;
 		if (val !== "") {
-			var champName = championDictionary.dataKeyFromHumanName[val];
-			if (champName) {
-				curr_champ_arr.push(champName);
-			}
+            
+            var champName = championDictionary.dataKeyFromHumanName[val];
+            
+            if (champName) 
+            {
+				curr_champ_arr.push(championDictionary.data[champName].key);
+            }
 		}
     }
     
