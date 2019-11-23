@@ -108,7 +108,7 @@ function getNextTenBestChamps(req, callback, response)
 {
 
     var champRiotIds = getSortedRiotIdsFromRequest(req);
-    
+
     if (champRiotIds.length === 5)
     {
         return callback(response);
@@ -145,7 +145,7 @@ function getNextTenBestChamps(req, callback, response)
             else { return 1; }
         })
 
-        response.nextBestChampions = nextBestChampions;
+        response.nextBestChampions = nextBestChampions.slice(0,10);
 
         console.log(response);
         connection.end();
