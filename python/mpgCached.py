@@ -27,6 +27,7 @@ def calculateCacheComps(champIds):
 
 
 cacheDict = {}
+
 count = 0
 
 row = cursor.fetchone()
@@ -71,15 +72,15 @@ for key in cacheDict:
     patch = splits[1]
     region = splits[2]
     if len(champs) == 1:
-        insertor(cursor, "singlecache", " (ChampOne, Patch, Region) ", (champs[0], patch, region))
+        insertor(cursor, "singlecache", " (ChampOne, Patch, Region, Games, Wins) ", (champs[0], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
     elif len(champs) == 2:
-        insertor(cursor, "doublecache", " (ChampOne, ChampTwo, Patch, Region) ", (champs[0], champs[1], patch, region))
+        insertor(cursor, "doublecache", " (ChampOne, ChampTwo, Patch, Region, Games, Wins) ", (champs[0], champs[1], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
     elif len(champs) == 3:
-        insertor(cursor, "triplecache", " (ChampOne, ChampTwo, ChampThree, Patch, Region) ", (champs[0], champs[1], champs[2], patch, region))
+        insertor(cursor, "triplecache", " (ChampOne, ChampTwo, ChampThree, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
     elif len(champs) == 4:
-        insertor(cursor, "quadruplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, Patch, Region) ", (champs[0], champs[1], champs[2], champs[3], patch, region))
+        insertor(cursor, "quadruplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
     elif len(champs) == 5:
-        insertor(cursor, "quintuplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive, Patch, Region) ", (champs[0], champs[1], champs[2], champs[3], champs[4], patch, region))
+        insertor(cursor, "quintuplecache", " (ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive, Patch, Region, Games, Wins) ", (champs[0], champs[1], champs[2], champs[3], champs[4], patch, region, cacheDict[key]['games'], cacheDict[key]['wins']))
 
 cursor.close()
 mySQLConn.commit()
