@@ -108,8 +108,7 @@ function getNextTenBestChamps(req, callback, response)
 {
 
     var champRiotIds = getSortedRiotIdsFromRequest(req);
-    var response = [];
-
+    
     if (champRiotIds.length === 5)
     {
         return callback(response);
@@ -131,27 +130,20 @@ function getNextTenBestChamps(req, callback, response)
            console.log(err);
         }
 
-        var champPercents = [];
         var nextBestChampions = [];
         for (var i = 0; i < result.length; i ++)
         {
             var champPercentTuple = {};
             champPercentTuple.champId = result[i].champ;
             champPercentTuple.winPercent = (result[i].wins) / (result[i].wins + result[i].losses);
-            champPercents.push(champPercentTuple);
+            nextBestChampions.push(champPercentTuple);
         }
 
-        champPercents.sort(function(a, b)
+        nextBestChampions.sort(function(a, b)
         {
             if(a.winPercent < b.winPercent)  { return -1; }
             else { return 1; }
         })
-
-        for (var champ in champPercents)
-        {
-            var row = {"champId": champ.champId, "winPercent": champ.winPercent};
-            nextBestChampions.push(row);
-        }
 
         response.nextBestChampions = nextBestChampions;
 
