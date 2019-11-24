@@ -63,6 +63,20 @@ function getChampWhereClauseForCacheTable(champRiotIds)
 
 function getChampWhereClauseForNextBestChamp(champRiotIds)
 {
+    // callers should assume that the 0th element of the return array is shorter by 1
+    // that first element is the passed in array
+    var potentialColumnOrders = []
+    potentialColumnOrders.push(champRiotIds);
+
+    for(var i = 0; i < champRiotIds.length; i ++)
+    {
+        var colToShiftRight = (champRiotIds.length)
+        var tempIds = [-1, -1, -1, -1, -1]
+        for (var j = 0; j < champRiotIds.length; j++)
+        {
+            tempIds[j] = champRiotIds[j]
+        }
+    }
 
 }
 
@@ -72,7 +86,7 @@ function getSortedRiotIdsFromRequest(req)
     var champRiotIds = [];
     for (var element in req.body['champs'])
     {
-        champRiotIds.push(req.body['champs'][element]);
+        champRiotIds.push(parseInt(req.body['champs'][element]));
     }
 
     champRiotIds = champRiotIds.sort(function(a, b) {
@@ -124,6 +138,7 @@ function getNextTenBestChamps(req, callback, response)
 
     if (champRiotIds.length === 5 || champRiotIds.length === 0)
     {
+        response.champIds = champRiotIds
         return callback(response);
     }
 
