@@ -68,7 +68,9 @@ function getSortedRiotIdsFromRequest(req)
         champRiotIds.push(req.body['champs'][element]);
     }
 
-    champRiotIds = champRiotIds.sort(); // make sure that we are in order
+    champRiotIds = champRiotIds.sort(function(a, b) {
+        return a - b;  
+    });; // make sure that we are in order
     return champRiotIds;
 }
 
