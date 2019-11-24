@@ -84,7 +84,7 @@ function getWinPercentage(req, callback)
 
     var champRiotIds = getSortedRiotIdsFromRequest(req);
 
-    var selectStatement = `SELECT SUM(Wins) as wins, SUM(Games) as losses FROM ${getCacheTableName(champRiotIds.length)} `
+    var selectStatement = `SELECT SUM(Wins) as wins, SUM(Losses) as losses FROM ${getCacheTableName(champRiotIds.length)} `
     var where = getChampWhereClauseForCacheTable(champRiotIds);
     var query = selectStatement + where;
     
@@ -114,7 +114,7 @@ function getNextTenBestChamps(req, callback, response)
         return callback(response);
     }
 
-    var query = `SELECT SUM(Wins) as wins, SUM(Games) as losses, ${getChampColumnName(champRiotIds.length)} as champ From ${getCacheTableName(champRiotIds.length + 1)} ${getChampWhereClauseForCacheTable(champRiotIds)} GROUP BY ${getChampColumnName(champRiotIds.length)}`
+    var query = `SELECT SUM(Wins) as wins, SUM(Losses) as losses, ${getChampColumnName(champRiotIds.length)} as champ From ${getCacheTableName(champRiotIds.length + 1)} ${getChampWhereClauseForCacheTable(champRiotIds)} GROUP BY ${getChampColumnName(champRiotIds.length)}`
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
