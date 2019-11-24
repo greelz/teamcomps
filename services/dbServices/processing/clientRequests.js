@@ -51,14 +51,21 @@ function getChampWhereClauseForCacheTable(champRiotIds)
 {
     // Given an array of champ riot keys generate a where clause that limits the number of columns to those champions
     // ASSUMPTION: champRiotkeys is in order i.e. [148, 225, 300] not [300, 148, 225]
-
     var clauses = [];
     for (var i = 0; i < champRiotIds.length; i++)
     {
+        if (champRiotIds[i] == -1) { continue; }
+        
         clauses.push(`${getChampColumnName(i)} = ${champRiotIds[i]}`);
     }
     return `WHERE ${clauses.join(' AND ')}`
 }
+
+function getChampWhereClauseForNextBestChamp(champRiotIds)
+{
+
+}
+
 
 function getSortedRiotIdsFromRequest(req)
 {
@@ -83,6 +90,10 @@ function getWinPercentage(req, callback)
     connection.connect();
 
     var champRiotIds = getSortedRiotIdsFromRequest(req);
+    if (champRiotIds.length === 0)
+    {
+        return;
+    }
 
     var selectStatement = `SELECT SUM(Wins) as wins, SUM(Losses) as losses FROM ${getCacheTableName(champRiotIds.length)} `
     var where = getChampWhereClauseForCacheTable(champRiotIds);
@@ -109,12 +120,17 @@ function getNextTenBestChamps(req, callback, response)
 
     var champRiotIds = getSortedRiotIdsFromRequest(req);
 
-    if (champRiotIds.length === 5)
+    if (champRiotIds.length === 5 || champRiotIds.length === 0)
     {
         return callback(response);
     }
 
-    var query = `SELECT SUM(Wins) as wins, SUM(Losses) as losses, ${getChampColumnName(champRiotIds.length)} as champ From ${getCacheTableName(champRiotIds.length + 1)} ${getChampWhereClauseForCacheTable(champRiotIds)} GROUP BY ${getChampColumnName(champRiotIds.length)}`
+    var query = 
+    `SELECT`+ 
+    `    SUM(Wins) as wins, SUM(Losses) as losses, ${getChampColumnName(champRiotIds.length)} as champ` + 
+    `    From ${getCacheTableName(champRiotIds.length + 1)}` + 
+    `    ${getChampWhereClauseForCacheTable(champRiotIds)}` +
+    `    GROUP BY ${getChampColumnName(champRiotIds.length)}`
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
@@ -146,7 +162,7 @@ function getNextTenBestChamps(req, callback, response)
         })
 
         response.nextBestChampions = nextBestChampions.slice(0,10);
-
+        response.champIds = champRiotIds;
         console.log(response);
         connection.end();
 
