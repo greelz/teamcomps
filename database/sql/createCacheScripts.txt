@@ -1,3 +1,9 @@
+drop table if exists singlecache;
+drop table if exists doublecache;
+drop table if exists triplecache;
+drop table if exists quadruplecache;
+drop table if exists quintuplecache;
+
 CREATE TABLE `quintuplecache` (
   `ChampOne` int DEFAULT NULL,
   `ChampTwo` int DEFAULT NULL,
@@ -7,7 +13,7 @@ CREATE TABLE `quintuplecache` (
   `Patch` varchar(20) DEFAULT NULL,
   `Region` varchar(20) DEFAULT NULL,
   `Wins` int DEFAULT NULL,
-  `Games` int DEFAULT NULL,
+  `Losses` int DEFAULT NULL,
   `AverageDuration` float DEFAULT NULL COMMENT 'This column stores the duration of the match in seconds',
   UNIQUE KEY `identifying_index` (`ChampOne`,`ChampTwo`, `ChampThree`, `ChampFour`, `ChampFive`, `Region`,`Patch`),
   KEY `lookup` (`ChampOne`,`ChampTwo`, `ChampThree`, `ChampFour`, `ChampFive`)
@@ -21,7 +27,7 @@ CREATE TABLE `quadruplecache` (
   `Patch` varchar(20) DEFAULT NULL,
   `Region` varchar(20) DEFAULT NULL,
   `Wins` int DEFAULT NULL,
-  `Games` int DEFAULT NULL,
+  `Losses` int DEFAULT NULL,
   `AverageDuration` float DEFAULT NULL COMMENT 'This column stores the duration of the match in seconds',
   UNIQUE KEY `identifying_index` (`ChampOne`,`ChampTwo`, `ChampThree`, `ChampFour`, `Region`,`Patch`),
   KEY `lookup` (`ChampOne`,`ChampTwo`, `ChampThree`, `ChampFour`)
@@ -34,7 +40,7 @@ CREATE TABLE `triplecache` (
   `Patch` varchar(20) DEFAULT NULL,
   `Region` varchar(20) DEFAULT NULL,
   `Wins` int DEFAULT NULL,
-  `Games` int DEFAULT NULL,
+  `Losses` int DEFAULT NULL,
   `AverageDuration` float DEFAULT NULL COMMENT 'This column stores the duration of the match in seconds',
   UNIQUE KEY `identifying_index` (`ChampOne`,`ChampTwo`, `ChampThree`, `Region`,`Patch`),
   KEY `lookup` (`ChampOne`,`ChampTwo`, `ChampThree`)
@@ -46,7 +52,7 @@ CREATE TABLE `doublecache` (
   `Patch` varchar(20) DEFAULT NULL,
   `Region` varchar(20) DEFAULT NULL,
   `Wins` int DEFAULT NULL,
-  `Games` int DEFAULT NULL,
+  `Losses` int DEFAULT NULL,
   `AverageDuration` float DEFAULT NULL COMMENT 'This column stores the duration of the match in seconds',
   UNIQUE KEY `identifying_index` (`ChampOne`,`ChampTwo`, `Region`,`Patch`),
   KEY `lookup` (`ChampOne`,`ChampTwo`)
@@ -57,7 +63,7 @@ CREATE TABLE `singlecache` (
   `Patch` varchar(20) DEFAULT NULL,
   `Region` varchar(20) DEFAULT NULL,
   `Wins` int DEFAULT NULL,
-  `Games` int DEFAULT NULL,
+  `Losses` int DEFAULT NULL,
   `AverageDuration` float DEFAULT NULL COMMENT 'This column stores the duration of the match in seconds',
   UNIQUE KEY `identifying_index` (`ChampOne`, `Region`,`Patch`),
   KEY `lookup` (`ChampOne`)
