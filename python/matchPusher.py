@@ -26,7 +26,6 @@ def pushMatchesToSiteFromZip(directory):
                     writeable_events.extend(temp_events)
 
                     if rowCount % 10000 == 0:
-                        print('posting matches')
                         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
                         requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
                         writeable_events.clear()
@@ -56,17 +55,13 @@ def pushMatchesToSite(directory):
                 writeable_events.extend(temp_events)
 
                 if rowCount % 10000 == 0:
-                    print('posting matches')
                     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
                     requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
                     writeable_events.clear()
-
             except Exception as error:
-                traceback.print_exc()
-                print(f'Error processing match file {matchFile}')
-
-    
-
+                pass
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
 
 if __name__ == "__main__":
     # Arguments
