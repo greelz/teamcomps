@@ -1,6 +1,9 @@
 body {
-	background: url(https://img.freepik.com/free-vector/blue-abstract-acrylic-brush-stroke-textured-background_53876-86373.jpg?size=626&ext=jpg);
-	background-size: cover;
+	background: #d3e0e5; 
+	background: -webkit-linear-gradient(to right, #d3e0e5, #ffffff);
+	background: linear-gradient(to right, #d3e0e5, #ffffff);
+	min-height: 100%;
+
 }
 
 .header {

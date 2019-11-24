@@ -23,7 +23,7 @@ function autocomplete(elem, source, searchCallback, stylingCallback) {
 			stylingCallback(item_name, elem);
         }
         if (searchCallback) {
-            searchCallback(item_name);
+            searchCallback(item_name, elem);
         }
     }
 

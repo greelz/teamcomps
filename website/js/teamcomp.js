@@ -6,19 +6,19 @@ function getBlankInputElement() {
     for (i = 0; i < champion_elements.length; i += 1) {
         elem = champion_elements[i];
         // Check to see if any element is null, and if so, focus on it
-        if (elem.value === "") {
+        if (elem.value.trim() === "") {
             return elem;
         }
     }
     return null;
 }
 
-function autocompleteSaveCallback(champion_name) {
+function autocompleteSaveCallback(champName, element) {
 	// First, add a new champion input if we can
 	tryAddNewChampionInputElem();
 
-	// Then, execute the search (mocked for now)
-	mockRequestResult(champion_name);
+	// Then, execute the search
+	sendRequestResult();
 }
 
 // Prioritize focusing on a blank input box
@@ -40,14 +40,42 @@ function tryAddNewChampionInputElem() {
 }
 
 function createChampionInputDiv() {
-	var div = dce("div"), elem = dce("input"), champ_names = [], champ;
+	var div = dce("div"), elem = dce("input"), xBtn = dce("input"), champ_names = [], champ;
 	for (champ in championDictionary.data) {
 		champ_names.push(championDictionary.data[champ].name)
 	}
 	addClass(elem, "champion_input");
 	elem.placeholder = "Champion";
-	autocomplete(elem, champ_names, autocompleteSaveCallback, getChampionImgSrc);
+	autocomplete(elem, champ_names, autocompleteSaveCallback, getChampionImgElement);
 	div.appendChild(elem);
+    addClass(xBtn, "xBtn");
+    xBtn.setAttribute("type", "button");
+    bindEvent(xBtn, "click", function() {
+        // getBlankInputElement returns a blank row, so if we have that 
+        // then we're fine to delete this one... otherwise just clear
+        // the text inside
+        var elements = $$('.champion_input');
+        var numElemsWithData = 0;
+        for (var i in elements) {
+            var contents = elements[i].value;
+            if (contents) {
+                numElemsWithData += (contents.trim().length > 0) ? 1 : 0;
+            }
+        }
+        if (getBlankInputElement() !== elem && numElemsWithData > 1 && numElemsWithData < 5) {
+            removeElement(div);
+            // If there's only 1 remaining element here, there's nothing to search
+            // for, so we shouldn't delete do another search
+            if (numElemsWithData > 1) {
+                sendRequestResult();
+            }
+        }
+        else {
+            elem.value = "";
+        }
+    });
+    xBtn.setAttribute("value", "X");
+    div.appendChild(xBtn);
 	return div;
 }
 
@@ -132,15 +160,25 @@ function getChampionName(val) {
     return null;
 }
 
-function getChampionImgSrc(champion_name, element) {
+function getChampionImgElement(champion_name, element) {
     // Since we'll have the champion display name, reformat it to
     // grab the champion key
 	var img = dce("img");
-	var champion = championDictionary.dataKeyFromHumanName[champion_name];
-	img.src = "images/champions/" + champion + ".png";
+	img.src = getChampionImageUrl(champion_name);
 	element.parentNode.insertBefore(img, element);
 	addClass(element, "slimFromPic");
 	addClass(img, "left");
+}
+
+function getChampionImageUrl(championPiece) {
+	var champion = championDictionary.dataKeyFromHumanName[championPiece];
+    if (!champion) {
+        champion = championDictionary.dataKeyFromRiotKey[parseInt(championPiece)];
+        if (!champion) {
+            champion = championPiece;
+        }
+    }
+	return "images/champions/" + champion + ".png";
 }
 
 
@@ -157,28 +195,11 @@ function addChampToSearch(champ_name) {
 	elemToChange.dispatchEvent(new Event("set_text"));
 }
 
-function search(url, callback) {
-    var champions = $$(".champion_input"), query, node, champ, champFromDic, searchCallback;
-    query = "";
-    for (node = 0; node < champions.length; node += 1) {
-        champ = champions[node].value;
-        champFromDic = championDictionary.name[champ];
-        if (champFromDic) {
-            query += "&champ" + (node + 1) + "=" + champFromDic.id;
-        }
-    }
-    if (query.length > 0) {
-        query = query.substring(1);
-        drawPhrasesAndSearch(url + query, callback);
-    }
-}
-
-
 // --------- Request Callbacks -----------
 
-function mockRequestResult() {
+function sendRequestResult() {
 	// We'll simply mock a request until the web server actually has data
-	// Jordan and I agreed that we'd have something that looks like this: <--- Matt lied here he actually assumed it would be { winPct: {decimal}, nextBestChampions: [{riotKey1, winPct1}, {riotKey2, winPct2}, ...]} :)
+	// Jordan and I agreed that we'd have something that looks like this: <--- Matt lied here he actually assumed it would be { winPct: {decimal}, champIds: [riotKey1, ...], nextBestChampions: [{riotKey1, winPct1}, {riotKey2, winPct2}, ...]} :)
 	// { winPct: .45454222, nextBestChampions: [riotKey1, riotKey2, ...] }
 	var numChamps = 10;
 	var availableChampions = Object.keys(championDictionary.dataKeyFromRiotKey), len = availableChampions.length;
@@ -190,9 +211,7 @@ function mockRequestResult() {
     {
         var val = champ.value;
 		if (val !== "") {
-            
             var champName = championDictionary.dataKeyFromHumanName[val];
-            
             if (champName) 
             {
 				curr_champ_arr.push(championDictionary.data[champName].key);
@@ -205,10 +224,10 @@ function mockRequestResult() {
         drawResultToScreen(JSON.parse(response));
     }, null, JSON.stringify({'champs': curr_champ_arr}), "JSON");
 
-	var mockResult = { 'championList': curr_champ_arr, 'winPct': Math.random(), 'nextBestChampions': randomChamps };
 
 	// Normally, we'd do some sort of ajax call here (get request)
 	// But now, I'll just simulate a delayed callback between 1-2 seconds... 
+	//var mockResult = { 'championList': curr_champ_arr, 'winPct': Math.random(), 'nextBestChampions': randomChamps };
 	// doOnDelay(drawResultToScreen, Math.random() * 2000, mockResult);
 }
 
@@ -216,9 +235,25 @@ function drawResultToScreen(result) {
 	var nextBest = $("#nextBest"), winPercent = $("#winPctP"), champName;
 	nextBest.innerHTML = "";
 
-    console.log(result);
 	// Put the winning percentage on the screen...
-    winPercent.innerHTML = formatPercent(result['winPercent']) + "%";
+    if (result['winPercent']) {
+        winPercent.innerHTML = formatPercent(result['winPercent']) + "%";
+    }
+    else {
+        winPercent.innerHTML = 'No games.';
+    }
+
+    // Draw the champions that are associated with the query
+    if (result['champIds']) {
+        var placeholder = $('#championResultsPlaceholder');
+        placeholder.innerHTML = "";
+        for (var i in result.champIds) {
+            var champ = dce("img");
+            addClass(champ, "champPlaceholder");
+            champ.src = getChampionImageUrl(result.champIds[i]);
+            $('#championResultsPlaceholder').appendChild(champ);
+        }
+    }
     
     nextBest.appendChild(p("Next best champions:", ["section_title"]));
 	nextBest.appendChild(p("These 10 champions synergize the best with the above composition.", ['section_subtitle']));
@@ -237,22 +272,6 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-function drawPhrasesAndSearch(url, callback) {
-    // Not sure I love this one yet... but it let's us do callbacks with an interval
-    // and guarantee that we can end the interval with the second callback
-    var phrases, parentElem, numPhrases, drawingInterval;
-    callAjax("http://teamcomp.org:8000/coolPhrases", function (response) {
-        phrases = JSON.parse(response);
-        numPhrases = phrases.length;
-        parentElem = $("#recommendations");
-        parentElem.innerHTML = phrases[getRandomInt(numPhrases)];
-        drawingInterval = setInterval(function () {
-            parentElem.innerHTML = phrases[getRandomInt(numPhrases)];
-        }, 700);
-        callAjax(url, callback, drawingInterval);
-    });
-}
-
 function createChampionTable(champIds) {
     var i = 0, table, row, cell, img;
     table = dce("table");
@@ -265,7 +284,7 @@ function createChampionTable(champIds) {
 
         // Champion Image
         img = dce("img");
-        img.src = getChampionImgSrc(champIds[i]);
+        img.src = getChampionImgElement(champIds[i]);
         cell.appendChild(img);
 
     }
@@ -314,19 +333,5 @@ bindEvent($("#themeButton"), "click", function (event) {
         changeTheme("light", event.target);
     }
 });
-
-/*
-bindEvent($("#winPercentBtn"), "click", function () {
-    search("http://teamcomp.org:8000/winPercentage?", winPercentCallback);
-});
-
-bindEvent($("#nextBestChampBtn"), "click", function () {
-    search("http://teamcomp.org:8000/nextbestchamp?", bestChampCallback);
-});
-
-callAjax("http://teamcomp.org:8000/totalGames", function (response) {
-    $("#totalGames").innerText = response + " games.";    
-});
-*/
 
 

@@ -59,7 +59,6 @@ function p(text, classList) {
 }
 
 function formatPercent(num) {
-    console.log(num);
 	if (num) {
 		num *= 100;
 		return parseFloat(num).toFixed(1);
