@@ -62,7 +62,7 @@ function createChampionInputDiv() {
                 numElemsWithData += (contents.trim().length > 0) ? 1 : 0;
             }
         }
-        if (getBlankInputElement() !== elem && numElemsWithData > 1 && numElemsWithData < 5) {
+        if (getBlankInputElement() !== elem && numElemsWithData > 0 && numElemsWithData < 5) {
             removeElement(div);
             // If there's only 1 remaining element here, there's nothing to search
             // for, so we shouldn't delete do another search
@@ -72,6 +72,8 @@ function createChampionInputDiv() {
         }
         else {
             elem.value = "";
+            removeClass(elem, "slimFromPic");
+            removeElement(elem.parentElement.getElementsByTagName("img")[0]);
         }
     });
     xBtn.setAttribute("value", "X");
