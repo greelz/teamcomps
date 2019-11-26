@@ -54,14 +54,7 @@ function createChampionInputDiv() {
         // getBlankInputElement returns a blank row, so if we have that 
         // then we're fine to delete this one... otherwise just clear
         // the text inside
-        var elements = $$('.champion_input');
-        var numElemsWithData = 0;
-        for (var i in elements) {
-            var contents = elements[i].value;
-            if (contents) {
-                numElemsWithData += (contents.trim().length > 0) ? 1 : 0;
-            }
-        }
+        var numElemsWithData = $('#championList').getElementsByTagName("img").length;
         if (getBlankInputElement() !== elem && numElemsWithData > 0 && numElemsWithData < 5) {
             removeElement(div);
             // If there's only 1 remaining element here, there's nothing to search

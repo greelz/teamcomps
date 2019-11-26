@@ -208,6 +208,7 @@ input[type="button" i] {
 	box-sizing: border-box;
 	border-color: buttonface;
 	border-image: initial;
+    border-radius: 2px;
 }
 
 input[type="button" i]:hover {
