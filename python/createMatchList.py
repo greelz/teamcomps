@@ -81,16 +81,17 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
     time_to_sleep.append(0) # Sometimes there were no games downloaded
     sleep_time_seconds = max(time_to_sleep)
     if sleep_time_seconds > 0:
-        chars = 'abcdefghijklmnopqrstuvwxyz'
         time1 = time.time()
         directory = "../../matchData/" + season + "/" + region
         print("Zipping, deleting originals, pushing to site.")
-        zu.createZip(directory, directory + "-" + datetime.now().strftime("%d%m%Y-%H%M%S"))
+        fancy_dir_name = directory + "-" + datetime.now().strftime("%d%m%Y-%H%M%S")
+        zu.createZip(directory, fancy_dir_name)
         zu.deleteFilesInFolder(directory)
-        pushMatchesToSiteFromZip(directory)
+        pushMatchesToSiteFromZip(fancy_dir_name)
         time2 = time.time()
-        if (time2 - time1) < sleep_time_seconds:
-            sleepy_time = sleep_time_seconds - (time2 - time1)
+        time_elapsed = time2 - time1
+        if time_elapsed < sleep_time_seconds:
+            sleepy_time = sleep_time_seconds - time_elapsed
             print("We finished the parsing, and we still will sleep for " + str(sleepy_time) + " seconds.")
             time.sleep(sleepy_time)
     if need_more_players:
