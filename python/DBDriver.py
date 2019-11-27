@@ -4,12 +4,16 @@ import json
 # relevant information for teamcomps.org. Generally, that's who won,
 # the patch, region, duration of game, and champions involved.
 
+# Description: Grab the dictionary json file that contains champion names, keys
+# Returns: Dictionary of champions, copy of assets/jschamp_data.json
 def getChampionDictionary():
     champs = {}
     with open("assets/jschamp_data.json", "r") as f:
         champs = json.load(f)
     return champs
 
+# Description: From a given match, get the winners and losers
+# Returns: [ { winner_row }, { loser_row } ], or None if the game is malformed
 def process_match(match_data):
     champion_dictionary = getChampionDictionary()
     team_dict = getWinnersAndLosers(match_data)
@@ -26,6 +30,7 @@ def process_match(match_data):
     else:
         return None
 
+# Returns: Dictionary of information for the database
 def build_team_event_row(champArr, isWin, matchId, patch, region, duration, champion_dictionary):
     champions = [champion_dictionary['dataKeyFromRiotKey'][str(key)] for key in champArr]
     team_event_row = {

@@ -4,7 +4,10 @@ import os
 import sys
 import threading
 import time
+import zipUtilities as zu
 from zipfile import ZipFile
+from matchPusher import pushMatchesToSiteFromZip
+from datetime import datetime
 
 def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, players_to_add = 0, player_ids = {}):
     account_id = d.getAccountIdByName(summoner_name, region)
@@ -12,6 +15,7 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
     num_unique_games_for_summoner = 0
 
     # Grab the first game of the season, then we can find how many games we'll need to officially grab.
+    # Note the hard-coded 0, 100 -- just grab the first 100 games
     match_json = d.getMatchesByAccountId(account_id, region, season, d.RANKED_SOLO_QUEUE, 0, 100)
 
     if 'totalGames' in match_json:
@@ -21,24 +25,32 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
         return
 
     num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add, region, season)
-    begin_index += 100
 
     while begin_index < total_games:
+        begin_index += 100 # Add 100 to begin_index so the next loop keeps going
         # Note, this request assumes that the Riot API doesn't care if we
         # request more than the total number of games. I think that makes sense
         match_json = d.getMatchesByAccountId(account_id, region, season, d.RANKED_SOLO_QUEUE, begin_index, begin_index + 100)
         
-        begin_index += 100 # Add 100 to begin_index so the next loop keeps going
 
-        # Consider upping total_games... since this sometimes is weird and increases the more requests we have. Not sure why. 
+        # Consider upping total_games... since this sometimes is weird and increases the more requests we have. Not sure why, I think this is a bug on their side tho
         if 'totalGames' in match_json:
             total_games = match_json['totalGames']
 
         # Save the unique game_ids
         num_unique_games_for_summoner += save_match_ids(match_json, game_ids, player_ids, players_to_add, region, season)
 
+    # Display how many games we downloaded, compared to how many total games they have
     print(str(num_unique_games_for_summoner) + "/" + str(total_games) + " unique games for " + summoner_name)
 
+
+# Parameters:
+#   match_json: list of matches, basically
+#   games_dictionary: list of existing matches
+#   player_dic: list of players that we want to download games for
+#   players_to_add: max numbers of players to queue up to add games for
+#   region: 
+#   season: 
 def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, region, season):
     games_to_download = []
     if 'matches' in match_json:
@@ -49,13 +61,12 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
                     games_to_download.append(game_id)
 
     # games_to_download is a list of unique game ids now
-    # Just spawn <n> threads to do the work here
+    # Just spawn <n> threads to do the work here, we know it's at most 100
     threads = []
-    num_threads = len(games_to_download) # We know this won't be larger than 100
+    num_threads = len(games_to_download) 
     players_arr = [[] for i in range(num_threads)]
     time_to_sleep = [0 for i in range(num_threads)]
-    time_to_sleep.append(0)
-    need_more_players = len(player_dic) < 1000
+    need_more_players = len(player_dic) < players_to_add
     for i in range(num_threads):
         games_dictionary[game_id] = ""
         new_thread = threading.Thread(target=thread_function, args=(games_to_download[i], region, season, players_arr, need_more_players, i, time_to_sleep))
@@ -64,13 +75,24 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
         time.sleep(.05)
         new_thread.start()
 
-    for idx, thread in enumerate(threads):
+    for thread in threads:
         thread.join()
 
+    time_to_sleep.append(0) # Sometimes there were no games downloaded
     sleep_time_seconds = max(time_to_sleep)
     if sleep_time_seconds > 0:
-        print("Heading to bed for " + str(sleep_time_seconds))
-        time.sleep(sleep_time_seconds)
+        chars = 'abcdefghijklmnopqrstuvwxyz'
+        time1 = time.time()
+        directory = "../../matchData/" + season + "/" + region
+        print("Zipping, deleting originals, pushing to site.")
+        zu.createZip(directory, directory + "-" + datetime.now().strftime("%d%m%Y-%H%M%S"))
+        zu.deleteFilesInFolder(directory)
+        pushMatchesToSiteFromZip(directory)
+        time2 = time.time()
+        if (time2 - time1) < sleep_time_seconds:
+            sleepy_time = sleep_time_seconds - (time2 - time1)
+            print("We finished the parsing, and we still will sleep for " + str(sleepy_time) + " seconds.")
+            time.sleep(sleepy_time)
     if need_more_players:
         for group in players_arr:
             group = set(group)
@@ -80,7 +102,10 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
 
     return len(games_to_download)
 
-def thread_function(game_id, region, season, player_arr, need_more_players, index, time_to_sleep):
+
+
+
+def thread_function(game_id, region, season, players_arr, need_more_players, index, time_to_sleep):
     game_json = d.getMatch(game_id, region)
     if 'sleepTime' in game_json:
         print("Thread knows it should sleep. Return sleep value.")
@@ -88,16 +113,16 @@ def thread_function(game_id, region, season, player_arr, need_more_players, inde
     else:
         write_game_to_file(game_json, game_id, region, season)
         if need_more_players:
-            save_player_ids(game_json, player_arr, index)
+            save_player_ids(game_json, players_arr, index)
 
-def save_player_ids(match_json, player_arr, index):
+def save_player_ids(match_json, players_arr, index):
     if match_json and 'participantIdentities' in match_json:
         players = match_json['participantIdentities']
         for player in players:
             player_obj = player['player']
             if 'summonerName' in player_obj:
                 summoner_name = player_obj['summonerName']
-                player_arr[index].append(summoner_name)
+                players_arr[index].append(summoner_name)
 
 def write_game_to_file(match_json, game_id, region, season):
     filename = game_id + '.json'
@@ -177,11 +202,13 @@ if __name__ == "__main__":
             # Need to check if we've looped through the entire list of players
             if players_list[summoner] == 1:
                 print("We've looped through all summoners. Complete.")
+                exit()
         else:
             print("We've looped through all summoners. Complete.")
-            break
+            exit()
 
         print("Downloading games for " + summoner)
         # Now we have a new summoner, find their games and keep going
         players_list[summoner] = 1
         getAllMatchesForSummoner(summoner, season, region, game_ids, unique_players_to_add, players_list)
+

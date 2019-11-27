@@ -1,12 +1,6 @@
 import requests
-import datetime
-import json
-import time
-from enum import Enum
 
-current_key_index = 0
-API_KEYS = ["RGAPI-1b563ac1-206e-4c71-8202-3ff527dd6894"]
-sleep_until_times = [0 for key in API_KEYS]
+API_KEY = "RGAPI-1b563ac1-206e-4c71-8202-3ff527dd6894"
 KEY_HEADER = "X-Riot-Token"
 RANKED_SOLO_QUEUE = "420"
 
@@ -69,18 +63,14 @@ def getLeague(league, region):
 
 def requestWrapper(url, headers = {}):
     ''' Algorithm: 
-        1. Get the request using the current API_KEY
-        2. If we need to sleep, then process then match and flip API_KEYS (for the next request)
-        3. If we're at the last API_KEY, then we head back to the start and sleep for the remaining time from step #2, and etc
+        1. Request whatever url we're looking for
+        2. Check if the response is fine. If not, we should sleep
+        3. Return the json response, or {} (consumers will always get a dictionary)
     '''
-
-    global current_key_index
-    headers[KEY_HEADER] = API_KEYS[current_key_index]
+    headers[KEY_HEADER] = API_KEY
     r = responseObject(requests.get(url, headers = headers))
 
     if r:
-        # First check if something went wrong (I'm not sure if this has ever really
-        # been hit). 
         if r.statusCode != 200:
             print('Something went wrong in Whoville, status code ' + str(r.statusCode))
             if r.sleepTime > 0:
@@ -93,28 +83,16 @@ def requestWrapper(url, headers = {}):
             return r.json
     return {}
     
-epoch = datetime.datetime.utcfromtimestamp(0)
-def unix_time_millis(dt = None):
-    if not dt:
-        dt = datetime.datetime.now()
-    return (dt - epoch).total_seconds() * 1000.0
-
 class responseObject:
     def  __init__(self, request):
         self.json = request.json()
         self.statusCode = request.status_code
-        '''
-            rateLimit (rl) and rateLimitCount (rlc) come in as two comma
-            delimited lists. rl contains the definition for the rate limits
-            and rlc contains the current counts for those. Each comma delimitted
-            piece is a colon delimitted piece which contains the seconds in the second
-            piece and the limit in the
-        '''
         rHeader = request.headers
 
         if self.statusCode == 429:
             # Right now, let's just sleep for 10 mins...
-            # The retry-after seems buggy...
+            # The retry-after seems buggy, and waiting for 10 mins is fine. That's the max
+            # limit from the website. We're being nice here.
             self.sleepTime = 600
         else:
             self.sleepTime = 0

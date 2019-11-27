@@ -1,37 +1,31 @@
 import requests
-import json
 import sys
 from pathlib import Path
 import json
-import traceback
 import DBDriver as dbd
-from zipfile import ZipFile
+import zipUtilities as zu
 
 
 def pushMatchesToSiteFromZip(directory):
     rowCount = 0
     writeable_events = []
-    if '.zip' not in directory:
-        directory = directory + '.zip'
-    with ZipFile(directory, 'r') as f:
-        for filename in f.infolist():
-            with f.open(filename) as match_json:
-                try:
-                    match = json.loads(match_json.read())
-                    temp_events = dbd.process_match(match) # seperate this line and the next so that we can keep count of "valid" matches
-                    if not temp_events:
-                        continue # don't fail for malformed games
-                    
-                    rowCount += len(temp_events)
-                    writeable_events.extend(temp_events)
+    for filedata in zu.getFilesFromZip(directory):
+        try:
+            match = json.loads(filedata)
+            temp_events = dbd.process_match(match) # seperate this line and the next so that we can keep count of "valid" matches
+            if not temp_events:
+                continue # don't fail for malformed games
+            
+            rowCount += 1
+            writeable_events.extend(temp_events)
 
-                    if rowCount % 10000 == 0:
-                        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-                        requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
-                        writeable_events.clear()
-                except Exception as error:
-                    pass
-    # Post the remaining games...
+            if rowCount % 10000 == 0:
+                headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+                requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
+                writeable_events.clear()
+        except Exception as error:
+            pass
+    # Don't forget to post the remaining games...
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     requests.post('http://teamcomps.org:2021/matches', data = json.dumps(writeable_events), headers = headers)
 
