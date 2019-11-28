@@ -178,6 +178,7 @@ function getNextTenBestChamps(req, callback, response)
     connection.connect();
     
     connection.query(query, function (err, result, fields) {
+        console.log(query);
         if (err)
         {
            console.log(err);
