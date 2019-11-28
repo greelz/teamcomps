@@ -162,7 +162,7 @@ function getNextTenBestChamps(req, callback, response)
         `SUM(Wins) as wins, SUM(Losses) as losses, ${champColumn} as champ ` + 
         `From ${getCacheTableName(champRiotIds.length + 1)} ` + 
         `${getChampWhereClauseForCacheTable(champRiotIds)} ` + // Function will automatically skip the column that is negative one
-        `GROUP BY ${getChampColumnName(champRiotIds.length)} `
+        `GROUP BY ${champColumn} `
         unionQueries.push(tempUnionQuery)
     }
 
