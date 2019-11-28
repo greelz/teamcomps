@@ -73,6 +73,7 @@ function getChampWhereClauseForNextBestChamp(champRiotIds)
     for (var i = 0; i < champRiotIds.length; i++)
     {
         tempIds = [];
+        tempIds[i]=-1;
         for (var j = 0; j < champRiotIds.length; j ++)
         {
             if (j < i) { tempIds[j] = champRiotIds[j]; }
@@ -90,7 +91,10 @@ function getChampWhereClauseForNextBestChamp(champRiotIds)
     // ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive
     potentialWhereClauses.push(getChampWhereClauseForCacheTable(tempIds));
 
-
+    for (var i = 0; i < potentialWhereClauses.length; i++)
+    {
+        console.log(potentialWhereClauses[i]);
+    }
     return potentialWhereClauses;
 }
 
@@ -161,7 +165,7 @@ function getNextTenBestChamps(req, callback, response)
         var tempUnionQuery = `SELECT `+ 
         `SUM(Wins) as wins, SUM(Losses) as losses, ${champColumn} as champ ` + 
         `From ${getCacheTableName(champRiotIds.length + 1)} ` + 
-        `${getChampWhereClauseForCacheTable(champRiotIds)} ` + // Function will automatically skip the column that is negative one
+        `${whereClauses[i]} ` + // Function will automatically skip the column that is negative one
         `GROUP BY ${champColumn} `
         unionQueries.push(tempUnionQuery)
     }
@@ -179,7 +183,6 @@ function getNextTenBestChamps(req, callback, response)
     
     connection.query(query, function (err, result, fields) {
         console.log(query);
-        console.log(result);
         if (err)
         {
            console.log(err);
@@ -203,7 +206,6 @@ function getNextTenBestChamps(req, callback, response)
 
         response.nextBestChampions = nextBestChampions.slice(0,10);
         response.champIds = champRiotIds;
-        console.log(response);
         connection.end();
 
         return callback(response);
