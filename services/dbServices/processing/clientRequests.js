@@ -129,16 +129,12 @@ function getWinPercentage(req, callback)
     var where = getChampWhereClauseForCacheTable(champRiotIds);
     var query = selectStatement + where;
     
-    // console.log(query);
-
     connection.query(query, function (err, result, fields) {
          if (err)
          {
-            // console.log(err);
+            console.log(err);
          }
-         // console.log(result);
         var response = {'winPercent': result[0].wins / (result[0].wins + result[0].losses)};
-        // console.log(response);
         connection.end();
 
         return getNextTenBestChamps(req, callback, response);
@@ -180,24 +176,18 @@ function getNextTenBestChamps(req, callback, response)
         database : 'teamcomps_db' // TODO config
     });
     connection.connect();
-    console.log("What I think is running: ")
-    console.log(query);
+    
     connection.query(query, function (err, result, fields) {
         if (err)
         {
            console.log(err);
         }
-        console.log("What is actually running");
-        console.log(this.sql);
         var nextBestChampions = [];
-        console.log(result);
-        console.log(result.length);
+       
         for (var i = 0; i < result.length; i ++)
         {
             var champPercentTuple = {};
             if (champRiotIds.includes(result[i].champ)) { continue; }
-            // if ( ( result[i].wins + result[i].losses < 4)) { continue; }
-            // console.log(`Champ: ${result[i].champ} - Wins: ${result[i].wins}, Losses: ${result[i].losses}`);
             champPercentTuple.champId = result[i].champ;
             champPercentTuple.winPercent = (result[i].wins) / (result[i].wins + result[i].losses);
             nextBestChampions.push(champPercentTuple);
@@ -211,6 +201,7 @@ function getNextTenBestChamps(req, callback, response)
 
         response.nextBestChampions = nextBestChampions.slice(0,10);
         response.champIds = champRiotIds;
+        console.log(response);
         connection.end();
 
         return callback(response);
