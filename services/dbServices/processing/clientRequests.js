@@ -1,6 +1,7 @@
 var mysql = require('mysql');
 var database = 'winlosseventfactwide';
 var constants = require('./constants');
+var pw='';
 
 var champs = constants.champDict;
 
@@ -65,19 +66,32 @@ function getChampWhereClauseForNextBestChamp(champRiotIds)
 {
     // callers should assume that the 0th element of the return array is shorter by 1
     // that first element is the passed in array
-    var potentialColumnOrders = []
-    potentialColumnOrders.push(champRiotIds);
-
-    for(var i = 0; i < champRiotIds.length; i ++)
+    var potentialColumnOrders = [];
+    var potentialWhereClauses = [];
+    var tempIds = [];
+    
+    for (var i = 0; i < champRiotIds.length; i++)
     {
-        var colToShiftRight = (champRiotIds.length)
-        var tempIds = [-1, -1, -1, -1, -1]
-        for (var j = 0; j < champRiotIds.length; j++)
+        tempIds = [];
+        for (var j = 0; j < champRiotIds.length; j ++)
         {
-            tempIds[j] = champRiotIds[j]
+            if (j < i) { tempIds[j] = champRiotIds[j]; }
+            else { tempIds[j+1] = champRiotIds[j]; }
         }
+        potentialColumnOrders.push(tempIds);
+        potentialWhereClauses.push(getChampWhereClauseForCacheTable(tempIds));
     }
+    tempIds = [...champRiotIds];
+    tempIds[champRiotIds.length] = -1;
 
+    potentialColumnOrders.push(tempIds);
+
+    // Adding this at the end let's us have a convenient order of
+    // ChampOne, ChampTwo, ChampThree, ChampFour, ChampFive
+    potentialWhereClauses.push(getChampWhereClauseForCacheTable(tempIds));
+
+
+    return potentialWhereClauses;
 }
 
 
@@ -100,7 +114,7 @@ function getWinPercentage(req, callback)
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : '', // TODO config
+        password : pw, // TODO config
         database : 'teamcomps_db' // TODO config
     });
     connection.connect();
@@ -115,16 +129,16 @@ function getWinPercentage(req, callback)
     var where = getChampWhereClauseForCacheTable(champRiotIds);
     var query = selectStatement + where;
     
-    console.log(query);
+    // console.log(query);
 
     connection.query(query, function (err, result, fields) {
          if (err)
          {
-            console.log(err);
+            // console.log(err);
          }
-         console.log(result);
+         // console.log(result);
         var response = {'winPercent': result[0].wins / (result[0].wins + result[0].losses)};
-        console.log(response);
+        // console.log(response);
         connection.end();
 
         return getNextTenBestChamps(req, callback, response);
@@ -141,32 +155,49 @@ function getNextTenBestChamps(req, callback, response)
         response.champIds = champRiotIds
         return callback(response);
     }
+    
+    var whereClauses = getChampWhereClauseForNextBestChamp(champRiotIds);
+    var unionQueries = [];
 
-    var query = 
-    `SELECT`+ 
-    `    SUM(Wins) as wins, SUM(Losses) as losses, ${getChampColumnName(champRiotIds.length)} as champ` + 
-    `    From ${getCacheTableName(champRiotIds.length + 1)}` + 
-    `    ${getChampWhereClauseForCacheTable(champRiotIds)}` +
-    `    GROUP BY ${getChampColumnName(champRiotIds.length)}`
+    for (var i=0; i < whereClauses.length; i++)
+    {
+        var champColumn = getChampColumnName(i);
+        var tempUnionQuery = `SELECT `+ 
+        `SUM(Wins) as wins, SUM(Losses) as losses, ${champColumn} as champ ` + 
+        `From ${getCacheTableName(champRiotIds.length + 1)} ` + 
+        `${getChampWhereClauseForCacheTable(champRiotIds)} ` + // Function will automatically skip the column that is negative one
+        `GROUP BY ${getChampColumnName(champRiotIds.length)} `
+        unionQueries.push(tempUnionQuery)
+    }
+
+    var fullUnionQuery = unionQueries.join(" UNION ALL ");
+    var query = `WITH lol AS (${fullUnionQuery}) SELECT SUM(wins) as wins, SUM(losses) as losses, champ FROM lol GROUP BY(champ)`
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : '', // TODO config
+        password : pw, // TODO config
         database : 'teamcomps_db' // TODO config
     });
     connection.connect();
-
+    console.log("What I think is running: ")
+    console.log(query);
     connection.query(query, function (err, result, fields) {
         if (err)
         {
            console.log(err);
         }
-
+        console.log("What is actually running");
+        console.log(this.sql);
         var nextBestChampions = [];
+        console.log(result);
+        console.log(result.length);
         for (var i = 0; i < result.length; i ++)
         {
             var champPercentTuple = {};
+            if (champRiotIds.includes(result[i].champ)) { continue; }
+            // if ( ( result[i].wins + result[i].losses < 4)) { continue; }
+            // console.log(`Champ: ${result[i].champ} - Wins: ${result[i].wins}, Losses: ${result[i].losses}`);
             champPercentTuple.champId = result[i].champ;
             champPercentTuple.winPercent = (result[i].wins) / (result[i].wins + result[i].losses);
             nextBestChampions.push(champPercentTuple);
@@ -180,7 +211,6 @@ function getNextTenBestChamps(req, callback, response)
 
         response.nextBestChampions = nextBestChampions.slice(0,10);
         response.champIds = champRiotIds;
-        console.log(response);
         connection.end();
 
         return callback(response);
