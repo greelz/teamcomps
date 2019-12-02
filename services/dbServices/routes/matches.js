@@ -14,4 +14,10 @@ router.post('/', function(req, res, next) {
     
 });
 
+router.post('/existence', function(req, res, next) {
+    messageController.getUniqueGames(req).then(function(rows) {
+        res.send(rows);
+    }).catch((err) => setImmediate(() => { throw err; }));
+});
+
 module.exports = router;
