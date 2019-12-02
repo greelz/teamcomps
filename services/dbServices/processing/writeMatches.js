@@ -58,6 +58,10 @@ function getUniqueGames(req) {
         matchIds.push(req.body[matchIdx]);
     }
 
+    if (matchIds.length < 1) {
+        return [];
+    }
+
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
@@ -71,8 +75,10 @@ function getUniqueGames(req) {
     return new Promise(function(resolve, reject) {
         connection.query(query, [matchIds], function(err, result) {
             if (err) {
+                connection.end();
                 return reject(err);
             }
+            connection.end();
             var res = new Set();
             for (var elem = 0; elem < result.length; ++elem) {
                 res.add(result[elem].matchid);
@@ -80,7 +86,6 @@ function getUniqueGames(req) {
             resolve(Array.from(difference(matchIdsAsSet, res)));
         });
     });
-    connection.end();
 }
 
 // Return everything in setA that isn't in setB
