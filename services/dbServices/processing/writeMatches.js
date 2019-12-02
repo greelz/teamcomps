@@ -40,10 +40,7 @@ function printRequest(req)
                 console.log(query);
                 errorLogged = true;
             }
-            
-
          }
-             
      }); 
 
     console.log('Successfully inserted matches!');
@@ -54,15 +51,12 @@ function printRequest(req)
 
 
 function getUniqueGames(req) {
-    var query = "select matchid from winlosseventfact where iswin and matchid in REPLACEME";
+    var query = "SELECT matchid FROM winlosseventfactwide WHERE iswin AND matchid IN (?)";
 
     var matchIds = [];
     for (var matchIdx = 0; matchIdx < req.body.length; ++matchIdx) {
         matchIds.push(req.body[matchIdx]);
     }
-    console.log(matchIds);
-
-    query = query.replace("REPLACEME", "(" + Array(matchIds.length).join("?,") + "?)");
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
@@ -72,16 +66,32 @@ function getUniqueGames(req) {
     });
 
     connection.connect();
+    matchIdsAsSet = new Set(matchIds);
+    matchIds = Array.from(matchIdsAsSet);
     return new Promise(function(resolve, reject) {
         connection.query(query, [matchIds], function(err, result) {
             if (err) {
                 return reject(err);
             }
-            resolve(result);
+            var res = new Set();
+            for (var elem = 0; elem < result.length; ++elem) {
+                res.add(result[elem].matchid);
+            }
+            resolve(Array.from(difference(matchIdsAsSet, res)));
         });
     });
     connection.end();
+}
 
+// Return everything in setA that isn't in setB
+// For our example, these will be unique games that the DB doesn't have
+function difference(setA, setB) {
+    for (var elem of setB) {
+        if (setA.has(elem)) {
+            setA.delete(elem);
+        }
+    }
+    return setA;
 }
 
 function generateChampValuesFromRequest(entry)
@@ -104,4 +114,5 @@ function generateChampValuesFromRequest(entry)
 
 module.exports = {
     printRequest: printRequest,
+    getUniqueGames: getUniqueGames,
 }

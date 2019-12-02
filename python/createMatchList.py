@@ -1,4 +1,5 @@
 import DataPuller as d
+import requests 
 import json
 import os
 import sys
@@ -44,6 +45,12 @@ def getAllMatchesForSummoner(summoner_name, season, region, game_ids = {}, playe
     print(str(num_unique_games_for_summoner) + "/" + str(total_games) + " unique games for " + summoner_name)
 
 
+def get_games_not_on_db(games_arr):
+    # Do a remote query
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    response = requests.post('http://localhost:2021/matches/existence', data = json.dumps(games_arr), headers = headers)
+    return response.json()
+
 # Parameters:
 #   match_json: list of matches, basically
 #   games_dictionary: list of existing matches
@@ -57,8 +64,11 @@ def save_match_ids(match_json, games_dictionary, player_dic, players_to_add, reg
         for game in match_json['matches']:
             if 'gameId' in game:
                 game_id = str(game['gameId'])
-                if game_id not in games_dictionary:
-                    games_to_download.append(game_id)
+                games_to_download.append(game_id)
+
+    print(games_to_download)
+    games_to_download = get_games_not_on_db(games_to_download)
+    input()
 
     # games_to_download is a list of unique game ids now
     # Just spawn <n> threads to do the work here, we know it's at most 100
