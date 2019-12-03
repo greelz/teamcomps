@@ -2,13 +2,14 @@ var constants = require('./constants');
 var mysql = require('mysql');
 var champNames = constants.getChampNames();
 
+password = '';
 
 function printRequest(req)
 {
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : '', // TODO config
+        password : password, // TODO config
         database : 'teamcomps_db' // TODO config
     });
 
@@ -59,13 +60,15 @@ function getUniqueGames(req) {
     }
 
     if (matchIds.length < 1) {
-        return new Promise();
+        return new Promise(function(resolve, reject) {
+            resolve([]);
+        });
     }
 
     var connection = mysql.createConnection({
         host     : 'localhost', // TODO config
         user     : 'root', // TODO config
-        password : '', // TODO config
+        password : password, // TODO config
         database : 'teamcomps_db' // TODO config
     });
 
