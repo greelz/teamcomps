@@ -59,7 +59,7 @@ function getUniqueGames(req) {
     }
 
     if (matchIds.length < 1) {
-        return [];
+        return new Promise();
     }
 
     var connection = mysql.createConnection({
