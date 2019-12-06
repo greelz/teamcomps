@@ -84,7 +84,7 @@ function getUniqueGames(req) {
             connection.end();
             var res = new Set();
             for (var elem = 0; elem < result.length; ++elem) {
-                res.add(result[elem].matchid);
+                res.add(result[elem].matchid + ""); // Need to convert to string
             }
             resolve(Array.from(difference(matchIdsAsSet, res)));
         });
