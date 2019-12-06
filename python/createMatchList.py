@@ -14,6 +14,7 @@ def getAllMatchesForSummoner(summoner_name, season, region, players_to_add = 0, 
     account_id = d.getAccountIdByName(summoner_name, region)
     begin_index = 0
     num_unique_games_for_summoner = 0
+    num_duplicates = 0
 
     # Grab the first game of the season, then we can find how many games we'll need to officially grab.
     # Note the hard-coded 0, 100 -- just grab the first 100 games
@@ -25,7 +26,9 @@ def getAllMatchesForSummoner(summoner_name, season, region, players_to_add = 0, 
         print("No games found for this summoner.")
         return
 
-    num_unique_games_for_summoner += save_match_ids(match_json, player_ids, players_to_add, region, season)
+    res_tuple = save_match_ids(match_json, player_ids, players_to_add, region, season)
+    num_unique_games_for_summoner += res_tuple[0]
+    num_duplicates += res_tuple[1]
 
     while begin_index < total_games:
         begin_index += 100 # Add 100 to begin_index so the next loop keeps going
@@ -39,10 +42,12 @@ def getAllMatchesForSummoner(summoner_name, season, region, players_to_add = 0, 
             total_games = match_json['totalGames']
 
         # Save the unique game_ids
-        num_unique_games_for_summoner += save_match_ids(match_json, player_ids, players_to_add, region, season)
+        res_tuple = save_match_ids(match_json, player_ids, players_to_add, region, season)
+        num_unique_games_for_summoner += res_tuple[0]
+        num_duplicates += res_tuple[1]
 
     # Display how many games we downloaded, compared to how many total games they have
-    print(str(num_unique_games_for_summoner) + "/" + str(total_games) + " unique games for " + summoner_name)
+    print(str(num_unique_games_for_summoner) + " unique games [" + "{:.1%}".format(num_unique_games_for_summoner / (num_unique_games_for_summoner + num_duplicates)) + "] downloaded for " + summoner_name)
 
 
 def get_games_not_on_db(games_arr):
@@ -57,6 +62,7 @@ def get_games_not_on_db(games_arr):
 #   players_to_add: max numbers of players to queue up to add games for
 #   region: 
 #   season: 
+# Returns: Tuple, (num_games_downloaded, num_duplicate_games_found)
 def save_match_ids(match_json, player_dic, players_to_add, region, season):
     games_to_download = []
     if 'matches' in match_json:
@@ -65,7 +71,10 @@ def save_match_ids(match_json, player_dic, players_to_add, region, season):
                 game_id = str(game['gameId'])
                 games_to_download.append(game_id)
 
+    num_of_games = len(games_to_download)
     games_to_download = get_games_not_on_db(games_to_download)
+    # I'm interested in how many games we find duplicated... store and return to print later
+    duplicated_games = num_of_games - len(games_to_download)
 
     # games_to_download is a list of unique game ids now
     # Just spawn <n> threads to do the work here, we know it's at most 100
@@ -107,7 +116,7 @@ def save_match_ids(match_json, player_dic, players_to_add, region, season):
                 if summoner_name not in player_dic:
                     player_dic[summoner_name] = 0
 
-    return len(games_to_download)
+    return len(games_to_download), duplicated_games
 
 
 
